@@ -26,9 +26,9 @@ def run(name):
 
     out_folder = basic.out_folder(name)
 
-
-    print(datestart)
-    print(out_folder)
+    #
+    # print(datestart)
+    # print(out_folder)
 
     pond_grid = gpd.read_file('ponds/ponds.geojson')
 
@@ -70,8 +70,8 @@ def run(name):
     df, wl = load_pond(datestart)
 
     df_cur = get_period(df, datestart, numdays)
-
-    inflow_fraction = {'One': 0, 'Two': .5, 'Three': .5, "Four": 0}
+    # inflow_fraction = {'One': 0, 'Two': .5, 'Three': .5, "Four": 0}
+    inflow_fraction = {'One': 0, 'Two': 0., 'Three': 0., "Four": 0}
 
     fraction = pd.DataFrame.from_dict(inflow_fraction, orient='index', columns=['fraction'])
 
@@ -94,10 +94,10 @@ def run(name):
 
         pinf = pinf * d['Value']
 
-        print(d['Value'])
-        print(ind)
+        # print(d['Value'])
+        # print(ind)
         name = f"RR_2022/ref/pond/day{cnt}.dat"
-        print(name)
+        # print(name)
         with open(name, 'w') as out:
             pinf.to_csv(name, header=False)
             # out.write(f.format(d['Value'], ind.strftime("%y %b %d")))
@@ -154,7 +154,7 @@ def load_pond(datestart):
     df = df.applymap(isnumber).fillna(0)
 
     # df = df.astype({'Pump 1':np.float64})
-    print(df.dtypes)
+    # print(df.dtypes)
     df.loc[:, 'Pump 1'] = df.loc[:, 'Pump 1'] * 18000 * 60 / (7.48 * 60 * 60 * 24)
     df.loc[:, 'Pump 2'] = df.loc[:, 'Pump 2'] * 9000 * 60 / (7.48 * 60 * 60 * 24)
     df.loc[:, 'Pump 3'] = df.loc[:, 'Pump 3'] * 18000 * 60 / (7.48 * 60 * 60 * 24)
