@@ -1,33 +1,96 @@
+import flopy
+import os
 import geopandas as gpd
 import basic
+import contextily as ctx
 import pandas as pd
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-import pathlib
-import warnings
+
+import geopandas as gpd
 import conda_scripts.plot_help as ph
 import basic
 import conda_scripts.arich_functions as af
+import cartopy.crs as ccrs
 
-def run(run_name):
-    info, swr_info, sfr_info, riv_keys_info = basic.load_params(run_name)
+import pathlib
+
+
+def run(name, draw_maps = True):
+    print('running pond inflows recharge package')
+    m = basic.load_model(name)
+
+    info, swr_info, sfr_info, riv_keys_info = basic.load_params(name)
 
     datestart = info['start_date']
+    numdays = info['numdays']
 
-    name = info['name']
-    m = basic.load_model()
-    out_folder = basic.out_folder(run_name)
-    print(datestart)
-    print(out_folder)
-    basic.map_river(m)
-    plt.savefig(os.path.join(out_folder, 'modelmap.png'),dpi = 250, bbox_inches = 'tight')
-
-    print('done with map')
+    out_folder = basic.out_folder(name)
 
     pond_grid = gpd.read_file('ponds/ponds.geojson')
 
-    ####
+    # get counts of pond cells
+    p = 1 / pond_grid.groupby('name').count().loc[:, ['row']].rename(columns={'row': 'pond_frac'})
+
+    pond_grid = pd.merge(pond_grid, p, left_on='name', right_index=True)
+
+    if draw_maps:
+        draw_map_do(pond_grid, out_folder)
+        draw_ponds_map(pond_grid, out_folder)
+
+    df, wl = load_pond(datestart)
+
+    df_cur = get_period(df, datestart, numdays)
+    inflow_fraction = {'One': 0, 'Two': .5, 'Three': .5, "Four": 0}
+
+    ax = df_cur.plot(ylabel='feet$^3$/s', figsize=(7, 7))
+    df_cur_roll = df_cur.rolling(5, min_periods=0).mean(center=False)
+
+    df_cur_roll.rename(columns={'Value': 'Value, Rolled'}).plot.area(ax=ax)
+    ax.set_title('Pond Inflows, Split Between 2 and 3')
+
+    plt.savefig(os.path.join(out_folder, 'pondQ.png'), dpi=250)
+
+    cnt = 0
+    df_cur_roll.to_csv(f"RR_2022/pond_inflows/sum.csv")
+
+    rech = {}
+
+    for ind, d in df_cur_roll.iterrows():
+        # pinf = pond_grid.query("inflow==True").set_index('rno')
+
+        pond = pond_grid.copy(deep=True)
+
+        fraction = pd.DataFrame.from_dict(inflow_fraction, orient='index', columns=['fraction'])
+
+        pond = pd.merge(pond, fraction, left_on='name', right_index=True)
+        # pinf = pinf.loc[:, ['fraction']]
+
+        pond.loc[:,'flow'] = pond.loc[:,'pond_frac'] * pond.loc[:,'fraction'] * d['Value']
+
+        pond.loc[:,'flow_depth'] = pond.loc[:,'flow']/(m.dis.delc[0] * m.dis.delr[0])
+
+
+        if pond.loc[:,'flow_depth'].sum()>0:
+            array = make_array(m, pond, col = 'flow_depth')
+        else:
+            array = 0.000
+        rech[cnt] = array
+
+        cnt = cnt + 1
+        print(cnt, end =' ', flush = True)
+
+    rch = make_rch(m, rech = rech)
+    rch.write_file()
+
+def make_rch(m, rech):
+    # rech = {cnt: f"pond_inflows/day{cnt}.dat" for cnt in range(m.nper)}
+    rch = flopy.modflow.ModflowRch(m, ipakcb = 1,  nrchop = 1, rech=rech)
+
+    return rch
+
+def draw_map_do(pond_grid, out_folder):
     fig, ax = basic.basic_map(maptype=None)
     basic.set_bounds_to_shape(ax, pond_grid.buffer(1000))
     pond_grid.sort_values('name').plot('name', ax=ax, legend=False, edgecolor='k')
@@ -45,46 +108,28 @@ def run(run_name):
     af.add_basemaps(ax, maptype="ctx.Esri.NatGeoWorldMap")
 
     plt.savefig(os.path.join(out_folder, 'pondloc_inflow.png'), dpi=250)
-    ####
+
+def draw_ponds_map(pond_grid, out_folder):
+    fig, ax = basic.basic_map()
+    basic.set_bounds_to_shape(ax, pond_grid.buffer(5000))
+    pond_grid.sort_values('name').plot('name', ax=ax, legend=False, edgecolor='k')
+    ax.set_title('Mirabel-Wohler Infiltration Ponds')
+
+    _gdf = pond_grid.dissolve('name').reset_index()
+    _gdf = _gdf.set_geometry(_gdf.geometry.representative_point())
+
+    ph.label_points(ax, _gdf,
+                    'name', basin_name=None, fmt='s', text_color='y')
+    plt.savefig(os.path.join(out_folder, 'pondloc.png'), dpi=250)
 
 
-    df, wl = load_pond(datestart)
+def make_array(m, df, col = 'flow_depth'):
 
-    df_cur = get_period(df, datestart, numdays)
-    # inflow_fraction = {'One': 0, 'Two': .5, 'Three': .5, "Four": 0}
-    inflow_fraction = {'One': 0, 'Two': 0., 'Three': 0., "Four": 0}
+    array = np.zeros((m.nrow, m.ncol))
 
-    fraction = pd.DataFrame.from_dict(inflow_fraction, orient='index', columns=['fraction'])
+    array[df.loc[:,'row']-1, df.loc[:,'column']-1] = df.loc[:,col]
 
-    ax = df_cur.plot(ylabel='feet$^3$/s', figsize=(7, 7))
-    df_cur_roll = df_cur.rolling(5, min_periods=0).mean(center=False)
-
-    df_cur_roll.rename(columns={'Value': 'Value, Rolled'}).plot.area(ax=ax)
-    ax.set_title('Pond Inflows, Split Between 2 and 3')
-
-    plt.savefig(os.path.join(out_folder, 'pondQ.png'), dpi=250)
-
-    cnt = 0
-    for ind, d in df_cur_roll.iterrows():
-        pinf = pond_grid.query("inflow==True").set_index('rno')
-
-        fraction = pd.DataFrame.from_dict(inflow_fraction, orient='index', columns=['fraction'])
-
-        pinf = pd.merge(pinf, fraction, left_on='name', right_index=True)
-        pinf = pinf.loc[:, ['fraction']]
-
-        pinf = pinf * d['Value']
-
-        # print(d['Value'])
-        # print(ind)
-        name = f"RR_2022/ref/pond/day{cnt}.dat"
-        # print(name)
-        with open(name, 'w') as out:
-            pinf.to_csv(name, header=False)
-            # out.write(f.format(d['Value'], ind.strftime("%y %b %d")))
-
-        cnt = cnt + 1
-
+    return array
 
 def assign_inflow(df_pond):
     '''
@@ -104,7 +149,6 @@ def assign_inflow(df_pond):
         dfall = dfall.append(pond)
 
     return dfall
-
 
 
 def load_phist(year=2020):
@@ -174,3 +218,12 @@ def get_period(df, start_date, numdays):
     assert df.loc[:, 'Value'].isnull().sum() == 0, 'has nans'
 
     return df
+
+
+
+if __name__ == "__main__":
+    print('running')
+    run('June2015')
+    print("Executed when invoked directly")
+else:
+    print("Executed when imported")
