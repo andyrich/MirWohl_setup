@@ -80,7 +80,7 @@ def load_caissons():
     
     df = pd.concat([c1, c2, c3, c4, c5, c6], axis = 1).fillna(0.)
     
-    df = df.astype({ic:np.float64 for ic in df.columns})
+    df = df.astype({ic:np.float32 for ic in df.columns})
     
     df[df.abs().values>1e10] = 0
     
@@ -109,6 +109,12 @@ def get_well_info(wells, timeseries):
                           left_on = 'wellname', right_on = 'level_0').sort_values('per')
     
     wells_info.loc[:,'qcell'] = -1 * wells_info.loc[:,'Q'].abs() * wells_info.loc[:,'frac'] / (24*60*60)
+    # wells_info = wells_info.astype({'qcell':'<f4'})
+
+    # dtypes = flopy.modflow.ModflowWel.get_default_dtype()
+    # wells_info = wells_info.to_records(index = False, column_dtypes = dtypes)
+
+    # print(wells_info.dtypes)
     
     return wells_info
     
@@ -124,12 +130,43 @@ def plot_pumping(df, out_folder):
 def mf_wel(m, ts_data):
     
     stress_period_data = {}
-
+    dtypes = flopy.modflow.ModflowWel.get_default_dtype()
+    ts_data = ts_data.astype({'qcell':np.float32})
+    # print(dtypes)
+    # dtypes = dict(dtypes)
+    # print(dtypes)
     for per, group in ts_data.loc[:,['per','k','i', 'j', 'qcell']].groupby('per'):
-        stress_period_data[per] = group.drop(columns = 'per').values
+        # stress_period_data[per] = group.drop(columns = 'per').rename(
+        #     columns = {'qcell':'flux'}).to_records(index = False, column_dtypes= dtypes)
+        # stress_period_data[per] = np.rec.array(group.drop(columns = 'per').rename(
+        #      columns = {'qcell':'flux'}).values, dtype = [('k', '<i4'), ('i', '<i4'), ('j', '<i4'), ('flux', '<f4')])
+        # dfcur = group.drop(columns = 'per').rename(
+        #      columns = {'qcell':'flux'})
+        # stress_period_data[per] = np.rec.array([tuple(x) for x in dfcur.values.tolist()],
+        #              dtype=[('k', '<i4'), ('i', '<i4'), ('j', '<i4'), ('flux', '<f4'), ])
+        # print(stress_period_data[per].dtype)
+        # sdf
+        group = group.loc[group.loc[:, 'qcell'].abs() > 0, :]
+        group = group.loc[group.loc[:,'qcell'].abs() > 1e-4,:] # without this threshold flopy makes a broken wel file for some reason
+        sp = np.zeros(group.shape[0], dtype=dtypes)
+        sp = sp.view(np.recarray)
+        sp['i'] = group.loc[:,'i'].astype(int).values.tolist()
+        sp['j'] = group.loc[:, 'j'].astype(int).values.tolist()
+        sp['k'] = group.loc[:, 'k'].astype(int).values.tolist()
+        sp['flux'] = group.loc[:, 'qcell'].astype(np.float32).values.tolist()
+        stress_period_data[per] = sp
+        if (per == 37) or ( per == 38):
+            print(sp)
+            print(sp.dtype)
+            print(group.dtypes)
+            print(group)
+
 
     wel = flopy.modflow.ModflowWel(m, ipakcb = 1,filenames ='RR.wel',
                                stress_period_data = stress_period_data)
     
     return wel
     
+if __name__ == '__main__':
+    print('running make wells')
+    run('June2012')
