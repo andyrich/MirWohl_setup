@@ -5,8 +5,8 @@ import write_inflows
 import Hydrographs
 import post_process_heads
 import matplotlib.pyplot as plt
-import pond_inflows
-
+import write_pond_inflows_rch
+import make_wells
 
 
 
@@ -16,9 +16,12 @@ for run in ['June2012', 'June2013', 'June2014', 'June2015',
 
     print(run)
     basic.setup_folder(run)
+    make_wells.run(name=run)
     write_inflows.run(model_name=run)
     # # SFRtoSWR.run(run)
-    pond_inflows.run(run)
+    write_pond_inflows_rch.run(run)
+
+
     m = basic.load_model()
 
     success, buffer = m.run_model(silent = False,)
@@ -30,3 +33,4 @@ for run in ['June2012', 'June2013', 'June2014', 'June2015',
         post_process_heads.run(run_name=run, head_frequency=5)
 
     plt.close('all')
+
