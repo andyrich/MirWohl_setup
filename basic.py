@@ -77,7 +77,8 @@ def load_model(verbose = False, path = None, nam = 'RRMF.nam'):
         path = 'RR_2022'
 
     print(path)
-    ml = flopy.modflow.Modflow.load(nam, 
+    ml = flopy.modflow.Modflow.load(nam,
+                                    # load_only= ['DIS', 'BAS6'],
                                     model_ws = path,
                                     verbose = verbose,
                                     version = 'mfnwt', 
@@ -249,3 +250,9 @@ def get_heads(m):
     
     return hds, hdsobj
 
+def isnumber(x):
+    try:
+        float(x)
+        return float(x)
+    except:
+        return np.nan
