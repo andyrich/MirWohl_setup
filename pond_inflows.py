@@ -17,6 +17,8 @@ import cartopy.crs as ccrs
 import pathlib
 
 def run(name):
+    
+    raise AssertionError('not used anymore')
     m = basic.load_model(name)
 
     info, swr_info, sfr_info, riv_keys_info = basic.load_params(name)
