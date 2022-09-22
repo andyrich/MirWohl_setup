@@ -7,6 +7,9 @@ import post_process_heads
 import matplotlib.pyplot as plt
 import write_pond_inflows_rch
 import make_wells
+import initial_conditions
+
+
 
 
 
@@ -21,8 +24,8 @@ for run in ['June2012', 'June2013', 'June2014', 'June2015',
     # # SFRtoSWR.run(run)
     write_pond_inflows_rch.run(run)
 
-
     m = basic.load_model()
+    success = initial_conditions.rerun_for_initial_cond(m, 2)
 
     success, buffer = m.run_model(silent = False,)
 
