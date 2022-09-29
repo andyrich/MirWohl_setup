@@ -155,11 +155,7 @@ def mf_wel(m, ts_data):
         sp['k'] = group.loc[:, 'k'].astype(int).values.tolist()
         sp['flux'] = group.loc[:, 'qcell'].astype(np.float32).values.tolist()
         stress_period_data[per] = sp
-        if (per == 37) or ( per == 38):
-            print(sp)
-            print(sp.dtype)
-            print(group.dtypes)
-            print(group)
+
 
 
     wel = flopy.modflow.ModflowWel(m, ipakcb = 1,filenames ='RR.wel',
@@ -169,4 +165,4 @@ def mf_wel(m, ts_data):
     
 if __name__ == '__main__':
     print('running make wells')
-    run('June2012')
+    run('June2017')
