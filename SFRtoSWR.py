@@ -251,9 +251,10 @@ def run(run_name):
     else:
         print('not setting new starting stages from old run.')
         endh = pd.read_csv('RR_2022/inputs/start_stage.tab', sep = '\t').rename(columns = {'#rno':'reach'})
+
     ax = endh.set_index('reach').rename(columns = {'endheads':'starting stage'}).plot(title = 'starting stage', marker = '.', figsize = (10,4))
     ax.grid(True); ax.set_ylabel('feet, elevation')
-    plt.savefig(os.path.join(out_folder, 'star_stage'))
+    plt.savefig(os.path.join(out_folder, 'star_stage.png'))
 
 
 
@@ -546,9 +547,18 @@ def run(run_name):
 
     print("\n\n\nDone!\n\n\n")
 
+def plot_start_stage(endh, out_folder):
 
+    if endh is None:
+        print('not setting new starting stages from old run.')
+        endh = pd.read_csv('RR_2022/inputs/start_stage.tab', sep = ',', header=None)
+        endh.columns = ['reach','endheads']
+        print(endh.head())
 
-
+    ax = endh.set_index('reach').rename(columns = {'endheads':'starting stage'}).plot(title = 'starting stage', marker = '.', figsize = (10,4))
+    ax.grid(True);
+    ax.set_ylabel('feet, elevation')
+    plt.savefig(os.path.join(out_folder, 'start_stage.png'))
 
 
 
