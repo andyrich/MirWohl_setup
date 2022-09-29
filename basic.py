@@ -1,9 +1,8 @@
 import flopy
-import os
+
+from pathlib import Path
+from shutil import copytree, ignore_patterns
 import geopandas as gpd
-import matplotlib.pyplot as plt
-import geopandas as gpd
-import basic
 import contextily as ctx
 import pandas as pd
 import numpy as np
@@ -11,6 +10,9 @@ import os
 import matplotlib.pyplot as plt
 import conda_scripts.make_map as mp
 import flopy.utils.binaryfile as bf
+import matplotlib.gridspec as gridspec
+import matplotlib as mpl
+import cartopy.crs as ccrs
 
 import shutil
 
@@ -42,31 +44,87 @@ def setup_folder(run_name):
     print(f'setting up folders with on versions\ {run_name}')
 
     if not os.path.exists(os.path.join('versions', run_name)):
-        
         os.mkdir(os.path.join('versions', run_name))
         
     if not os.path.exists(os.path.join('versions', run_name, 'hydrographs')):
-        
         os.mkdir(os.path.join('versions', run_name, 'hydrographs'))
 
     if not os.path.exists(os.path.join('versions', run_name, 'wl_maps')):
         os.mkdir(os.path.join('versions', run_name, 'wl_maps'))
-    
+
+    if not os.path.exists(os.path.join('versions', run_name, 'model_files')):
+        os.mkdir(os.path.join('versions', run_name, 'model_files'))
+
     import shutil
-
-    src = 'website_info/subindex.html'
-    dst = os.path.join('versions', run_name, 'subindex.html')
-    if not os.path.exists(dst):
+    def replace(src, dst):
         shutil.copyfile(src, dst)
 
-    src = 'website_info/gallery.html'
-    dst = os.path.join('versions', run_name, 'gallery.html')
-    if not os.path.exists(dst):
-        shutil.copyfile(src, dst)
-    
-    
+    replace(src = 'website_info/subindex.html',
+            dst = os.path.join('versions', run_name, 'subindex.html'))
 
-def out_folder(run_name = 'calibration'):
+    replace(src = 'website_info/gallery.html',
+            dst = os.path.join('versions', run_name, 'gallery.html'))
+
+    replace(src = 'website_info/reach_numbers.png',
+            dst = os.path.join('versions', run_name, 'reach_numbers.png'))
+
+    replace(src = 'website_info/sfr_swr_map.png',
+            dst = os.path.join('versions', run_name, 'sfr_swr_map.png'))
+
+    replace(src = 'website_info/SWR Reaches.png',
+            dst = os.path.join('versions', run_name, 'SWR Reaches.png'))
+
+    replace(src = 'website_info/xsect_locs.png',
+            dst = os.path.join('versions', run_name, 'xsect_locs.png'))
+
+    replace(src = 'website_info/lay 1 top.png',
+            dst = os.path.join('versions', run_name, 'lay 1 top.png'))
+
+
+def copy_mod_files(run_name, path=None):
+    '''
+    copy model files to version/{run_name}/model_files
+    :param run_name:
+    :param path:
+    :return:
+    '''
+    if path is None:
+        path = 'RR_2022'
+
+    if os.path.exists(os.path.join('versions', run_name, 'model_files')):
+        shutil.rmtree(os.path.join('versions', run_name, 'model_files'))
+
+    ignore = ignore_patterns('*.exe', '*RR.rch', '*.lst', '*.evt', '*.chk',
+                             '*.git*', '*.ipy*', '*.py', 'pond_inflows*',
+                             'dis_versions*', 'Results', '^.bat',
+                             'IS*.dat', '*.hds', '*.cbc', 'Conv*', 'day*',
+                             'solution*', '*.riv')
+    print(f"copying files from:\m{path}\n\nto\n{run_name}\model_files")
+    copytree(path, os.path.join('versions', run_name, 'model_files'), ignore=ignore)
+    make_model_files_html(run_name)
+
+
+def make_model_files_html(run_name):
+    '''
+    make html file showing all input files for model
+    :param run_name:
+    :return:
+    '''
+    head = '''<h1>Model Files</h1>\n'''
+    b = """<a href="{:}"> {:}<br></a>\n""".format
+
+    gallery = Path(os.path.join('versions', run_name, 'model_files')).glob('**/*')
+    print(f'writing html file of model input files in versions\{run_name}\model_files.html')
+    with open(os.path.join('versions', run_name, 'model_files.html'), 'w') as outfile:
+        outfile.write(head)
+        for v in gallery:
+            if v.is_file():
+                outfile.write(b(v.relative_to(Path('versions', run_name)), v.name))
+                # print(outfile.write(b(v,v)))
+
+
+
+def out_folder(run_name = 'June2015'):
     info, swr, sfr, riv_keys = load_params(run_name)
     
     return os.path.join('versions', info['name'])
@@ -256,3 +314,61 @@ def isnumber(x):
         return float(x)
     except:
         return np.nan
+    
+    
+def plot_all_aquifer_props(ml, run_name):
+    fig = plot_aquifer_prop(ml, ml.upw.hk.array)
+    fname = os.path.join('versions', run_name, 'hk.png')
+    plt.savefig(fname, bbox_inches = 'tight')
+
+    fig = plot_aquifer_prop(ml, ml.upw.vka.array, title='Vertical Hydraulic Conductivity')
+    fname = os.path.join('versions', run_name, 'vk.png')
+    plt.savefig(fname, bbox_inches = 'tight')
+
+    fig = plot_aquifer_prop(ml, ml.upw.ss.array, vmin=0.001, vmax=0.1, title='Specific Storage')
+    fname = os.path.join('versions', run_name, 'ss.png')
+    plt.savefig(fname, bbox_inches = 'tight')
+
+    fig = plot_aquifer_prop(ml, ml.upw.ss.array*0+0.001, vmin=0.001, vmax=0.1, title='Specific Yield')
+    fname = os.path.join('versions', run_name, 'sy.png')
+    plt.savefig(fname, bbox_inches = 'tight')
+
+    plt.close('all')
+    
+def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
+                      cmap =  'viridis', title = "Horizontal Conductivity"):
+    plt.figure()
+    # fig, ax = plt.subplots(2,3, figsize =(15,15), constrained_layout=True)
+    fig = plt.figure(constrained_layout=True,  figsize =(15,15))
+    gs = gridspec.GridSpec(2, 3, figure = fig, height_ratios = [3,1])
+
+    for lay in range(3):
+        ax = fig.add_subplot(gs[0, lay], projection = ccrs.epsg(2226))
+
+        mapview = flopy.plot.PlotMapView(ml,ax = ax)
+
+        hk = array[lay]
+        # hk = ml.upw.hy.array[lay]
+        ib = ml.bas6.ibound.array[lay]
+        hk[ib==0] = np.nan
+
+        ma = np.ma.array(hk, mask = ml.bas6.ibound.array[lay]==0)
+        norm=mpl.colors.LogNorm(vmin = vmin, vmax=vmax)
+        quadmesh = mapview.plot_array(ma, norm = norm, cmap = cmap)
+
+
+        ax.set_title(f"layer {lay+1}")
+        ax.tick_params(labelbottom=False, labelleft=False)
+
+        ctx.add_basemap(ax, crs = 2226, url = 
+           "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}",
+                        attribution='')
+
+        ax2 = fig.add_subplot(gs[1, lay])
+        ax2.hist(hk.reshape(-1))
+
+
+    cb1 = fig.colorbar(quadmesh, ax=ax, location='right', shrink=.50)
+    fig.suptitle(title)
+
+    return fig
