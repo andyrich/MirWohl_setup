@@ -92,7 +92,7 @@ def plot_rds_stage(m, datestart, out_folder, numdays = 109, ISWRPQAQ = None):
 
     ax = ISWRPQAQ.plot(figsize=(15, 10), title='RDS Water Level', color='b')
 
-    stg.plot(ax = ax, color = 'k')
+    stg[stg<100].plot(ax = ax, color = 'k')
 
     plt.savefig(os.path.join(out_folder, 'rds_stage.png'), dpi=250, bbox_inches='tight')
 
