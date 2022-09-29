@@ -314,7 +314,14 @@ def isnumber(x):
         return float(x)
     except:
         return np.nan
-    
+
+def plot_maps(ml, run_name):
+    map_river(ml)
+    plt.savefig(os.path.join('versions', run_name, 'modelmap.png'), dpi=250, bbox_inches='tight')
+
+    # # plot swr model cells
+    fig,ax = swr_map(ml)
+    plt.savefig(os.path.join('versions', run_name, 'sfr_swr_map.png'), dpi = 250)
     
 def plot_all_aquifer_props(ml, run_name):
     fig = plot_aquifer_prop(ml, ml.upw.hk.array)
@@ -342,6 +349,8 @@ def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
     fig = plt.figure(constrained_layout=True,  figsize =(15,15))
     gs = gridspec.GridSpec(2, 3, figure = fig, height_ratios = [3,1])
 
+    axupper = []
+    axlower = []
     for lay in range(3):
         ax = fig.add_subplot(gs[0, lay], projection = ccrs.epsg(2226))
 
@@ -367,8 +376,10 @@ def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
         ax2 = fig.add_subplot(gs[1, lay])
         ax2.hist(hk.reshape(-1))
 
+        axupper.extend([ax])
+        axlower.extend([ax2])
 
     cb1 = fig.colorbar(quadmesh, ax=ax, location='right', shrink=.50)
     fig.suptitle(title)
 
-    return fig
+    return fig, axupper, axlower
