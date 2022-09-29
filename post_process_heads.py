@@ -148,7 +148,7 @@ def run(run_name, head_frequency = 5, add_basemap = False):
           </a>
           <div class="desc">{:}</div>
         </div>""".format
-        f = os.listdir(os.path.join(out_folder,'hydrographs'))
+        # f = os.listdir(os.path.join(out_folder,'hydrographs'))
 
         gallery.append(gal(filename,  filename, title.split('\n')[0], title.split('\n')[0]))
 
