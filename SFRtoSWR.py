@@ -27,8 +27,7 @@ def run(run_name):
     out_folder = basic.out_folder(run_name)
     print(datestart)
     print(out_folder)
-    basic.map_river(m)
-    plt.savefig(os.path.join(out_folder, 'modelmap.png'),dpi = 250, bbox_inches = 'tight')
+
 
     print('done with map')
 
@@ -198,7 +197,8 @@ def run(run_name):
             print('using ending stage values from previous run')
             endh.insert(0,'reach', value  = np.arange(endh.shape[0]) + 1 )
             # display(endh.head())
-            endh.rename(columns = {'reach':'#rno'}).to_csv('RR_2022/inputs/start_stage.tab', sep = '\t', index = False)
+            endh.rename(columns = {'reach':'#rno'}).to_csv('RR_2022/inputs/start_stage.tab',
+                                                           sep = ',', index = False, header = False)
             return endh
         else:
             print('using stream thalwegs')
@@ -206,7 +206,9 @@ def run(run_name):
             df.loc[:,'thalwegs'] = df.loc[:,'thalweg']+stage_shift_from_mod_top
             print(f'using thalweg + {stage_shift_from_mod_top:.2f}ft for each reach starting stage')
 
-            df.loc[:,['reach','thalweg']].rename(columns = {'reach':'#rno'}).to_csv('RR_2022/inputs/start_stage.tab', sep = '\t', index = False)
+            df.loc[:,['reach','thalweg']].rename(columns = {'reach':'#rno'}).to_csv('RR_2022/inputs/start_stage.tab',
+                                     header = False, sep = ',', index = False)
+
             return df.loc[:,['reach','thalweg']].rename(columns = {'reach':'#rno'})
 
     def plot_swr(sfr_filt):
@@ -250,18 +252,22 @@ def run(run_name):
         print(f'setting new stages from old run. using kper {kper} as extraction period')
     else:
         print('not setting new starting stages from old run.')
-        endh = pd.read_csv('RR_2022/inputs/start_stage.tab', sep = '\t').rename(columns = {'#rno':'reach'})
+        # endh = pd.read_csv('RR_2022/inputs/start_stage.tab', sep = '\t').rename(columns = {'#rno':'reach'})
+        # endh = pd.read_csv('RR_2022/inputs/start_stage.tab', sep = ',', header=None)
+        # endh.columns = ['reach','endheads']
+        endh = None
 
-    ax = endh.set_index('reach').rename(columns = {'endheads':'starting stage'}).plot(title = 'starting stage', marker = '.', figsize = (10,4))
-    ax.grid(True); ax.set_ylabel('feet, elevation')
-    plt.savefig(os.path.join(out_folder, 'star_stage.png'))
+    plot_start_stage(endh, out_folder)
+    # ax = endh.set_index('reach').rename(columns = {'endheads':'starting stage'}).plot(title = 'starting stage', marker = '.', figsize = (10,4))
+    # ax.grid(True); ax.set_ylabel('feet, elevation')
+    # plt.savefig(os.path.join(out_folder, 'star_stage.png'))
 
 
 
-    print('plotting swr map')
-    # # plot swr model cells
-    fig,ax = basic.swr_map(m)
-    plt.savefig(os.path.join(out_folder, 'sfr_swr_map.png'), dpi = 250)
+    # print('plotting swr map')
+    # # # plot swr model cells
+    # fig,ax = basic.swr_map(m)
+    # plt.savefig(os.path.join(out_folder, 'sfr_swr_map.png'), dpi = 250)
 
 
 
@@ -553,7 +559,7 @@ def plot_start_stage(endh, out_folder):
         print('not setting new starting stages from old run.')
         endh = pd.read_csv('RR_2022/inputs/start_stage.tab', sep = ',', header=None)
         endh.columns = ['reach','endheads']
-        print(endh.head())
+        # print(endh.head())
 
     ax = endh.set_index('reach').rename(columns = {'endheads':'starting stage'}).plot(title = 'starting stage', marker = '.', figsize = (10,4))
     ax.grid(True);
