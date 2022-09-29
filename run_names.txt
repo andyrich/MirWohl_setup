@@ -1,0 +1,358 @@
+{   
+    "calibration":{
+        "name":"calibration",
+        "start_date":"4/15/2019",
+        "numdays":109,
+        "description":"write-math",
+        "notes":"",
+    
+    "parameters":{
+        "SWR":{
+            "IGEOTYPE" : 3, 
+            "IGCNDOP" : 1, 
+            "GMANNING" : 0.025,   
+            "LEAKANCE" : 0.00002, 
+            "evap":0,
+            "rain":0,
+            "getextd" : 0.25,
+            "reach_main":578,
+            "IROUTETYPE":3, 
+            "use_thalweg":false,
+            "dam_swr_rno" : 765,
+            "use_average_reach_len" : false,
+            "set_start_stage":false,
+            "kper" : "none",
+            "SWR_processor": "write_dataset_11a_with_geo"},
+       
+        "SFR":
+            {"info":"sfr"}
+        }
+
+        },
+        
+        "June2020":{
+        "name":"June2020",
+        "start_date":"4/15/2020",
+        "numdays":109,
+        "description":"write-math",
+        "notes":"",
+    
+    "parameters":{
+        "SWR":{
+            "IGEOTYPE" : 3, 
+            "IGCNDOP" : 1, 
+            "GMANNING" : 0.025,   
+            "LEAKANCE" : 0.00002, 
+            "evap":0,
+            "rain":0,
+            "getextd" : 0.25,
+            "reach_main":578,
+            "IROUTETYPE":3, 
+            "use_thalweg":false,
+            "dam_swr_rno" : 765,
+            "use_average_reach_len" : false,
+            "set_start_stage":false,
+            "kper" : "none",
+            "SWR_processor": "write_dataset_11a_with_geo"},
+       
+        "SFR":
+            {"info":"sfr"}
+        }
+
+        },
+
+
+        "June2020":{
+        "name":"June2020",
+        "start_date":"4/15/2020",
+        "numdays":109,
+        "description":"write-math",
+        "notes":"",
+
+    "parameters":{
+        "SWR":{
+            "IGEOTYPE" : 3,
+            "IGCNDOP" : 1,
+            "GMANNING" : 0.025,
+            "LEAKANCE" : 0.0005,
+            "evap":0,
+            "rain":0,
+            "getextd" : 0.25,
+            "reach_main":578,
+            "IROUTETYPE":3,
+            "use_thalweg":false,
+            "dam_swr_rno" : 765,
+            "use_average_reach_len" : false,
+            "set_start_stage":false,
+            "kper" : "none",
+            "SWR_processor": "write_dataset_11a_with_geo"},
+
+        "SFR":
+            {"info":"sfr"}
+        }
+
+        },
+        
+        "June2019":{
+        "name":"June2019",
+        "start_date":"4/15/2019",
+        "numdays":109,
+        "description":"write-math",
+        "notes":"",
+    
+    "parameters":{
+        "SWR":{
+            "IGEOTYPE" : 3, 
+            "IGCNDOP" : 1, 
+            "GMANNING" : 0.025,   
+            "LEAKANCE" : 0.00002, 
+            "evap":0,
+            "rain":0,
+            "getextd" : 0.25,
+            "reach_main":578,
+            "IROUTETYPE":3, 
+            "use_thalweg":false,
+            "dam_swr_rno" : 765,
+            "use_average_reach_len" : false,
+            "set_start_stage":false,
+            "kper" : "none",
+            "SWR_processor": "write_dataset_11a_with_geo"},
+       
+        "SFR":
+            {"info":"sfr"}
+        }
+
+        },
+        
+        
+        "June2018":{
+        "name":"June2018",
+        "start_date":"4/15/2018",
+        "numdays":109,
+        "description":"write-math",
+        "notes":"",
+    
+    "parameters":{
+        "SWR":{
+            "IGEOTYPE" : 3, 
+            "IGCNDOP" : 1, 
+            "GMANNING" : 0.025,   
+            "LEAKANCE" : 0.00002, 
+            "evap":0,
+            "rain":0,
+            "getextd" : 0.25,
+            "reach_main":578,
+            "IROUTETYPE":3, 
+            "use_thalweg":false,
+            "dam_swr_rno" : 765,
+            "use_average_reach_len" : false,
+            "set_start_stage":false,
+            "kper" : "none",
+            "SWR_processor": "write_dataset_11a_with_geo"},
+       
+        "SFR":
+            {"info":"sfr"}
+        }
+
+        },
+        
+        "June2017":{
+        "name":"June2017",
+        "start_date":"4/15/2017",
+        "numdays":109,
+        "description":"write-math",
+        "notes":"",
+    
+    "parameters":{
+        "SWR":{
+            "IGEOTYPE" : 3, 
+            "IGCNDOP" : 1, 
+            "GMANNING" : 0.025,   
+            "LEAKANCE" : 0.00002, 
+            "evap":0,
+            "rain":0,
+            "getextd" : 0.25,
+            "reach_main":578,
+            "IROUTETYPE":3, 
+            "use_thalweg":false,
+            "dam_swr_rno" : 765,
+            "use_average_reach_len" : false,
+            "set_start_stage":false,
+            "kper" : "none",
+            "SWR_processor": "write_dataset_11a_with_geo"},
+       
+        "SFR":
+            {"info":"sfr"}
+        }
+
+        },
+    
+    
+    
+    
+        
+    "June2016":{
+        "name":"June2016",
+        "start_date":"4/15/2016",
+        "numdays":109,
+        "description":"write-math",
+        "notes":"",
+    
+    "parameters":{
+        "SWR":{
+            "IGEOTYPE" : 3, 
+            "IGCNDOP" : 1, 
+            "GMANNING" : 0.025,   
+            "LEAKANCE" : 0.00002, 
+            "evap":0,
+            "rain":0,
+            "getextd" : 0.25,
+            "reach_main":578,
+            "IROUTETYPE":3, 
+            "use_thalweg":false,
+            "dam_swr_rno" : 765,
+            "use_average_reach_len" : false,
+            "set_start_stage":false,
+            "kper" : "none",
+            "SWR_processor": "write_dataset_11a_with_geo"},
+       
+        "SFR":
+            {"info":"sfr"}
+        }
+
+        },
+        
+        "June2015":{
+        "name":"June2015",
+        "start_date":"4/15/2015",
+        "numdays":109,
+        "description":"write-math",
+        "notes":"",
+    
+    "parameters":{
+        "SWR":{
+            "IGEOTYPE" : 3, 
+            "IGCNDOP" : 1, 
+            "GMANNING" : 0.025,   
+            "LEAKANCE" : 0.00002, 
+            "evap":0,
+            "rain":0,
+            "getextd" : 0.25,
+            "reach_main":578,
+            "IROUTETYPE":3, 
+            "use_thalweg":false,
+            "dam_swr_rno" : 765,
+            "use_average_reach_len" : false,
+            "set_start_stage":false,
+            "kper" : "none",
+            "SWR_processor": "write_dataset_11a_with_geo"},
+       
+        "SFR":
+            {"info":"sfr"}
+        }
+
+        },
+        "June2014":{
+        "name":"June2014",
+        "start_date":"4/15/2014",
+        "numdays":109,
+        "description":"write-math",
+        "notes":"",
+    
+    "parameters":{
+        "SWR":{
+            "IGEOTYPE" : 3, 
+            "IGCNDOP" : 1, 
+            "GMANNING" : 0.025,   
+            "LEAKANCE" : 0.00002, 
+            "evap":0,
+            "rain":0,
+            "getextd" : 0.25,
+            "reach_main":578,
+            "IROUTETYPE":3, 
+            "use_thalweg":false,
+            "dam_swr_rno" : 765,
+            "use_average_reach_len" : false,
+            "set_start_stage":false,
+            "kper" : "none",
+            "SWR_processor": "write_dataset_11a_with_geo"},
+       
+        "SFR":
+            {"info":"sfr"}
+        }
+
+        },
+        
+        "June2013":{
+        "name":"June2013",
+        "start_date":"4/15/2013",
+        "numdays":109,
+        "description":"write-math",
+        "notes":"",
+    
+    "parameters":{
+        "SWR":{
+            "IGEOTYPE" : 3, 
+            "IGCNDOP" : 1, 
+            "GMANNING" : 0.025,   
+            "LEAKANCE" : 0.00002, 
+            "evap":0,
+            "rain":0,
+            "getextd" : 0.25,
+            "reach_main":578,
+            "IROUTETYPE":3, 
+            "use_thalweg":false,
+            "dam_swr_rno" : 765,
+            "use_average_reach_len" : false,
+            "set_start_stage":false,
+            "kper" : "none",
+            "SWR_processor": "write_dataset_11a_with_geo"},
+       
+        "SFR":
+            {"info":"sfr"}
+        }
+
+        },
+        
+        
+        "June2012":{
+        "name":"June2012",
+        "start_date":"6/15/2012",
+        "numdays":109,
+        "description":"write-math",
+        "notes":"",
+    
+    "parameters":{
+        "SWR":{
+            "IGEOTYPE" : 3, 
+            "IGCNDOP" : 1, 
+            "GMANNING" : 0.025,   
+            "LEAKANCE" : 0.00002, 
+            "evap":0,
+            "rain":0,
+            "getextd" : 0.25,
+            "reach_main":578,
+            "IROUTETYPE":3, 
+            "use_thalweg":false,
+            "dam_swr_rno" : 765,
+            "use_average_reach_len" : false,
+            "set_start_stage":false,
+            "kper" : "none",
+            "SWR_processor": "write_dataset_11a_with_geo"},
+       
+        "SFR":
+            {"info":"sfr"}
+        }
+
+        },
+        
+        
+        "use_anonymous":true,
+    
+            
+        "riv_keys" : 
+        {"Dry_creek":{"inuit":55,"iseg":15, "file":"Dry_creek.dat"},
+            "Mark_west":{"inuit":57,"iseg":50, "file":"MarkWest.dat"},
+        "Russian River":{"inuit":56,"iseg":22, "file":"RRinflow.dat"}}
+
+}
