@@ -1,0 +1,9 @@
+{   
+
+            
+        "riv_keys" : 
+        {"Dry_creek":{"inuit":55,"iseg":15, "file":"Dry_creek.dat"},
+            "Mark_west":{"inuit":57,"iseg":50, "file":"MarkWest.dat"},
+        "Russian River":{"inuit":56,"iseg":22, "file":"RRinflow.dat"}}
+
+}
