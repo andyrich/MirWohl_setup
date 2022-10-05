@@ -28,7 +28,7 @@ def run(run_name, reload = False):
     info, swr_info, sfr_info, riv_keys_info = basic.load_params(run_name)
 
     datestart = info['start_date']
-
+    numdays = info['numdays']
     name = info['name']
 
     out_folder = basic.out_folder(run_name)
@@ -95,7 +95,7 @@ def run(run_name, reload = False):
         print(f"plotting {station_name}")
         idx = (0, wel.loc['i_r'], wel.loc['j_c'])
         head = get_ts(idx, hdsobj, datestart)
-        obs = load_obs(wel.loc['Well Name'], datestart,1)
+        obs = load_obs(wel.loc['Well Name'], datestart,numdays=numdays)
 
         if obs.shape[0]==0:
             skip_gw_data = False
@@ -147,11 +147,14 @@ def get_ts(idx,hdsobj, datestart, ):
 
     return df
 
-def load_obs(name, datestart=None, end_time=None):
+def load_obs(name, datestart=None, numdays=109):
 
     fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
 
     path = pathlib.Path(fold).joinpath(name.replace(' ', '').replace('-', '_') + '.csv')
+
+    # if end_time is None:
+    end_time = pd.to_datetime(datestart) + pd.to_timedelta(numdays, unit='D')
 
     if path.exists():
         print(f"----------\path does exist:\n{path.name}")
@@ -160,7 +163,7 @@ def load_obs(name, datestart=None, end_time=None):
         stg = stg.resample('1D').mean()
 
         if datestart is not None:
-            stg = stg.loc[datestart:, :].iloc[:109]
+            stg = stg.loc[datestart:end_time, :]
 
 
     else:
