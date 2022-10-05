@@ -88,7 +88,7 @@ def load_caissons():
     
     return df
 
-def get_period(df, start_date, numdays):
+def get_period(df, start_date, numdays, assign_per = True):
 
 
     df = df.loc[start_date:, :].iloc[:numdays]
@@ -97,8 +97,12 @@ def get_period(df, start_date, numdays):
 
     assert df.isnull().sum().sum() == 0, 'has nans'
     assert df.index.to_series().diff().nunique()==1, 'index has missing days'
-    
-    df.loc[:,'per'] = np.arange(numdays)
+
+    if assign_per:
+        df.loc[:,'per'] = np.arange(numdays)
+    else:
+        df.loc[:,'per'] = np.arange(df.shape[0])
+
     df = df.set_index('per', append = True)
     
     return df
