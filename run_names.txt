@@ -1,608 +1,322 @@
 {
- "sfrpt07":{
-        "name":"sfrpt07",
-        "start_date":"4/15/2016",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3,
-            "IGCNDOP" : 1,
-            "GMANNING" : 0.025,
-            "LEAKANCE" : 1.4e-06,
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3,
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-
-        "SFR":
-            {"info":"sfr",
-            "hcond1":1.05e-06,
-            "strthick":10.0},
-
-        "GHB":
-            {"cond":0.01}
-        }
-
-        },
- "sfrpt04":{
-        "name":"sfrpt04",
-        "start_date":"4/15/2016",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3,
-            "IGCNDOP" : 1,
-            "GMANNING" : 0.025,
-            "LEAKANCE" : 0.0000008,
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3,
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.0000006,
-            "strthick":10.0},
-
-        "GHB":
-            {"cond":0.01}
-        }
-
-        },
-
- "sfrpt02":{
-        "name":"sfrpt02",
-        "start_date":"4/15/2016",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3,
-            "IGCNDOP" : 1,
-            "GMANNING" : 0.025,
-            "LEAKANCE" : 0.0000004,
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3,
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.0000003,
-            "strthick":10.0},
-
-        "GHB":
-            {"cond":0.01}
-        }
-
-        },
-
-  "sfrpt01":{
-        "name":"sfrpt01",
-        "start_date":"4/15/2016",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3,
-            "IGCNDOP" : 1,
-            "GMANNING" : 0.025,
-            "LEAKANCE" : 0.0000002,
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3,
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.00000015,
-            "strthick":10.0},
-
-        "GHB":
-            {"cond":0.01}
-        }
-
-        },
-
-  "sfrpt1":{
-        "name":"sfrpt1",
-        "start_date":"4/15/2016",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3,
-            "IGCNDOP" : 1,
-            "GMANNING" : 0.025,
-            "LEAKANCE" : 0.000002,
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3,
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.0000015,
-            "strthick":10.0},
-        "GHB":
-            {"cond":0.01}
-        }
-
-        },
-
-        "ghbpt1_init":{
-        "name":"ghbpt1_init",
-        "start_date":"4/15/2016",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-    
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3, 
-            "IGCNDOP" : 1, 
-            "GMANNING" : 0.025,   
-            "LEAKANCE" : 0.00002, 
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3, 
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.000},
-        "GHB":
-            {"cond":0.1}
-        }
-
-        },
-
-  "ghbpt01":{
-        "name":"ghbpt01",
-        "start_date":"4/15/2016",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3,
-            "IGCNDOP" : 1,
-            "GMANNING" : 0.025,
-            "LEAKANCE" : 0.00002,
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3,
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.0},
-        "GHB":
-            {"cond":0.01}
-        }
-
-        },
-
-          "ghbpt001":{
-        "name":"ghbpt001",
-        "start_date":"4/15/2016",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3,
-            "IGCNDOP" : 1,
-            "GMANNING" : 0.025,
-            "LEAKANCE" : 0.00002,
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3,
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.0},
-        "GHB":
-            {"cond":0.001}
-        }
-
-        },
-
-
         "June2020":{
-        "name":"June2020",
-        "start_date":"4/15/2020",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
+                    "name":"June2020",
+                    "start_date":"4/15/2020",
+                    "numdays":109,
+                    "description":"write-math",
+                    "notes":"",
 
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3,
-            "IGCNDOP" : 1,
-            "GMANNING" : 0.025,
-            "LEAKANCE" : 0.0005,
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3,
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.025,
+                        "LEAKANCE" : 1.4e-06,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
 
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.0},
-        "GHB":
-            {"cond":0.01}
-        }
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
 
-        },
+                    },
         
         "June2019":{
-        "name":"June2019",
-        "start_date":"4/15/2019",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-    
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3, 
-            "IGCNDOP" : 1, 
-            "GMANNING" : 0.025,   
-            "LEAKANCE" : 0.00002, 
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3, 
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-       
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.0},
+                    "name":"June2019",
+                    "start_date":"4/15/2019",
+                    "numdays":109,
+                    "description":"write-math",
+                    "notes":"",
 
-        "GHB":
-            {"cond":0.01}
-        }
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.025,
+                        "LEAKANCE" : 1.4e-06,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
 
-        },
-        
-        
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+
+
         "June2018":{
-        "name":"June2018",
-        "start_date":"4/15/2018",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-    
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3, 
-            "IGCNDOP" : 1, 
-            "GMANNING" : 0.025,   
-            "LEAKANCE" : 0.00002, 
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3, 
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-       
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.0},
-        "GHB":
-            {"cond":0.01}
-        }
+                    "name":"June2018",
+                    "start_date":"4/15/2018",
+                    "numdays":109,
+                    "description":"write-math",
+                    "notes":"",
 
-        },
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.025,
+                        "LEAKANCE" : 1.4e-06,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
         
         "June2017":{
-        "name":"June2017",
-        "start_date":"4/15/2017",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-    
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3, 
-            "IGCNDOP" : 1, 
-            "GMANNING" : 0.025,   
-            "LEAKANCE" : 0.00002, 
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3, 
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-       
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.0},
-        "GHB":
-            {"cond":0.01}
-        }
+                    "name":"June2017",
+                    "start_date":"4/15/2017",
+                    "numdays":109,
+                    "description":"write-math",
+                    "notes":"",
 
-        },
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.025,
+                        "LEAKANCE" : 1.4e-06,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+
     
-    
-    
-    
-        
+
     "June2016":{
-        "name":"June2016",
-        "start_date":"4/15/2016",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-    
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3, 
-            "IGCNDOP" : 1, 
-            "GMANNING" : 0.025,   
-            "LEAKANCE" : 0.00002, 
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3, 
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-       
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.0},
-        "GHB":
-            {"cond":0.01}
-        }
+                    "name":"June2016",
+                    "start_date":"4/15/2016",
+                    "numdays":109,
+                    "description":"write-math",
+                    "notes":"",
 
-        },
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.025,
+                        "LEAKANCE" : 1.4e-06,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
         
         "June2015":{
-        "name":"June2015",
-        "start_date":"4/15/2015",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-    
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3, 
-            "IGCNDOP" : 1, 
-            "GMANNING" : 0.025,   
-            "LEAKANCE" : 0.00002, 
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3, 
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-       
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.0},
-        "GHB":
-            {"cond":0.01}
-        }
+                    "name":"June2015",
+                    "start_date":"4/15/2015",
+                    "numdays":109,
+                    "description":"write-math",
+                    "notes":"",
 
-        },
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.025,
+                        "LEAKANCE" : 1.4e-06,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
         "June2014":{
-        "name":"June2014",
-        "start_date":"4/15/2014",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-    
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3, 
-            "IGCNDOP" : 1, 
-            "GMANNING" : 0.025,   
-            "LEAKANCE" : 0.00002, 
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3, 
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-       
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.0},
-        "GHB":
-            {"cond":0.01}
-        }
+                    "name":"June2014",
+                    "start_date":"4/15/2014",
+                    "numdays":109,
+                    "description":"write-math",
+                    "notes":"",
 
-        },
-        
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.025,
+                        "LEAKANCE" : 1.4e-06,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+
         "June2013":{
-        "name":"June2013",
-        "start_date":"4/15/2013",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-    
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3, 
-            "IGCNDOP" : 1, 
-            "GMANNING" : 0.025,   
-            "LEAKANCE" : 0.00002, 
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3, 
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-       
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.0},
-        "GHB":
-            {"cond":0.01}
-        }
+                    "name":"June2013",
+                    "start_date":"4/15/2013",
+                    "numdays":109,
+                    "description":"write-math",
+                    "notes":"",
 
-        },
-        
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.025,
+                        "LEAKANCE" : 1.4e-06,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+
         
         "June2012":{
-        "name":"June2012",
-        "start_date":"6/15/2012",
-        "numdays":109,
-        "description":"write-math",
-        "notes":"",
-    
-    "parameters":{
-        "SWR":{
-            "IGEOTYPE" : 3, 
-            "IGCNDOP" : 1, 
-            "GMANNING" : 0.025,   
-            "LEAKANCE" : 0.00002, 
-            "evap":0,
-            "rain":0,
-            "getextd" : 0.25,
-            "reach_main":578,
-            "IROUTETYPE":3, 
-            "use_thalweg":false,
-            "dam_swr_rno" : 765,
-            "use_average_reach_len" : false,
-            "set_start_stage":false,
-            "kper" : "none",
-            "SWR_processor": "write_dataset_11a_with_geo"},
-       
-        "SFR":
-            {"info":"sfr",
-            "hcond1":0.000015,
-            "strthick":10.0},
-        "GHB":
-            {"cond":0.01}
-        }
+                    "name":"June2012",
+                    "start_date":"6/15/2012",
+                    "numdays":109,
+                    "description":"write-math",
+                    "notes":"",
 
-        },
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.025,
+                        "LEAKANCE" : 1.4e-06,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
 
             
         "riv_keys" : 
