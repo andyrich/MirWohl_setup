@@ -122,7 +122,7 @@ def run(run_name, head_frequency = 5, add_basemap = False):
             # im = axes[i].imshow(hdslayer, vmin=0, vmax=75)
             axes[i].set_title("Layer {}".format(i + 1))
             ma = np.ma.array(hdslayer,mask = m.bas6.ibound.array[i]==0)
-            quadmesh = mapview.plot_array(ma, vmax = 80,vmin  =20,cmap = 'gist_ncar_r')
+            quadmesh = mapview.plot_array(ma, vmax = 50,vmin  =20,cmap = 'gist_ncar_r')
             # ctr = axes[i].contour(ma, colors="k", linewidths=0.5, vmin = 0, vmax = 75)
 
             set_bounds(axes[i], 'mirabel')
