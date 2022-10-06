@@ -27,8 +27,6 @@ def run(run_name):
     out_folder = basic.out_folder(run_name)
     print(datestart)
     print(out_folder)
-
-
     print('done with map')
 
 
