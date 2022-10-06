@@ -51,14 +51,15 @@ def run(run_name, reload = False):
         wiski_meta = get_wiski()
         wells = get_well_locations()
 
-        wells_mod = pd.merge(wiski_meta, wells.loc[:,['Well Name', 'WISKI','Notes_SX', 'Notes_SRM',
-                          'USGS Map ID (https://pubs.usgs.gov/ds/610/pdf/ds610.pdf)','USGS NWIS ID',
-                         'WCR (Y/N)','Total completed depth (ft bgs)', 'Total depth (ft bgs)',
-                        'Screened interval (ft bgs)', 'casing diameter (inches)',]] ,
-                             left_on = 'station_name', right_on = 'WISKI', how = 'inner')
+        wells_mod = pd.merge(wiski_meta, wells.loc[:,['Well Name','Filename',
+                    'WISKI','Notes_SX', 'Notes_SRM',
+                    'USGS Map ID (https://pubs.usgs.gov/ds/610/pdf/ds610.pdf)','USGS NWIS ID',
+                    'WCR (Y/N)','Total completed depth (ft bgs)', 'Total depth (ft bgs)',
+                    'Screened interval (ft bgs)', 'casing diameter (inches)',]] ,
+                    left_on = 'station_name', right_on = 'WISKI', how = 'inner')
 
         wells_mod = gpd.GeoDataFrame(wells_mod, geometry = gpd.points_from_xy(wells_mod.station_longitude, wells_mod.station_latitude), crs  = 4326).to_crs(2226)
-        wells_mod.to_html(os.path.join(out_folder,'observation_wells.html'))
+
 
         grid = flopy.utils.gridintersect.GridIntersect(ml.modelgrid)
 
@@ -74,7 +75,7 @@ def run(run_name, reload = False):
         print('loading wells_mod from file')
         wells_mod = gpd.read_file('GIS/wells_mod.geojson')
 
-
+    wells_mod.to_html(os.path.join(out_folder, 'observation_wells.html'))
     m = wells_mod.filter(regex = 'geom|Name|WISKI|Name|depth').explore( marker_kwds = {'radius':5, 'color':'black'},
                                                              name = 'Monitoring Wells')
 
@@ -90,12 +91,15 @@ def run(run_name, reload = False):
     hds, hdsobj = basic.get_heads(ml)
 
     partics = os.path.join(out_folder,'hydrographs')
+
     for _,  wel in wells_mod.iterrows():
         station_name = wel['station_name']
         print(f"plotting {station_name}")
         idx = (0, wel.loc['i_r'], wel.loc['j_c'])
         head = get_ts(idx, hdsobj, datestart)
-        obs = load_obs(wel.loc['Well Name'], datestart,numdays=numdays)
+        obs = load_obs(wel.loc['Filename'], datestart,numdays=numdays)
+        # obs = load_obs(wel.loc['Well Name'], datestart,numdays=numdays)
+
 
         if obs.shape[0]==0:
             skip_gw_data = False
@@ -107,12 +111,14 @@ def run(run_name, reload = False):
         filename=os.path.join(partics,f'{f}.png')
         # if not os.path.exists(filename):
         nwp = gwp.fancy_plot(station_name,group = None,
-                             filename=os.path.join(partics,f'{f}.png'),
-                             allinfo=None,do_regress=False)
+                             filename=None,
+                             allinfo=None,
+                             do_regress=False)
 
-        nwp.do_plot(False, skip_gw_data=skip_gw_data, map_buffer_size = 2500, seasonal = False,
+        nwp.do_plot(False, skip_gw_data=skip_gw_data,
+                    map_buffer_size = 2500, seasonal = False,
                     plot_dry = False, plot_wet = False,
-                  maptype = 'ctx.USGS.USTopo')
+                    maptype = 'ctx.USGS.USTopo')
 
 
 
@@ -125,17 +131,19 @@ def run(run_name, reload = False):
             nwp.upleft.set_ylim([np.nanmin([miny,minya])-10, np.nanmax([maxy,maxya])+10])
 
         if not skip_gw_data:
-
+            # re-set xlimits because limits fancy plot are set to 1980
             nwp.upleft.set_xlim(left = head.index.min()-pd.to_timedelta('1 w'),
                                 right = head.index.max()+pd.to_timedelta('1 w'))
 
-        nwp.upleft.xaxis.set_major_locator(mdates.AutoDateLocator())
-        nwp.upleft.xaxis.set_minor_locator(mdates.DayLocator())
-        nwp.upleft.xaxis.set_major_formatter(
-                    mdates.ConciseDateFormatter(nwp.upleft.xaxis.get_major_locator()))
+            nwp.upleft.xaxis.set_major_locator(mdates.MonthLocator())
+            nwp.upleft.xaxis.set_minor_locator(mdates.WeekdayLocator())
+            nwp.upleft.xaxis.set_major_formatter(
+                        mdates.ConciseDateFormatter(mdates.MonthLocator()))
 
 
         plt.savefig(filename,dpi = 250, bbox_inches ='tight')
+
+
 
 
 def get_ts(idx,hdsobj, datestart, ):
@@ -151,13 +159,19 @@ def load_obs(name, datestart=None, numdays=109):
 
     fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
 
-    path = pathlib.Path(fold).joinpath(name.replace(' ', '').replace('-', '_') + '.csv')
+    if isinstance(name, str):
+        pass
+    else:
+        name = 'no filename given'
+
+    path = pathlib.Path(fold).joinpath(name)
+    # path = pathlib.Path(fold).joinpath(name.replace(' ', '').replace('-', '_') + '.csv')
 
     # if end_time is None:
     end_time = pd.to_datetime(datestart) + pd.to_timedelta(numdays, unit='D')
 
     if path.exists():
-        print(f"----------\path does exist:\n{path.name}")
+        print(f"----------\npath does exist:\n{path.name}\n")
         stg = pd.read_csv(path, parse_dates=[0])
         stg = stg.set_index(stg.columns[0])
         stg = stg.resample('1D').mean()
@@ -167,7 +181,7 @@ def load_obs(name, datestart=None, numdays=109):
 
 
     else:
-        print(f"path does not exist:\n{path}")
+        print(f"path does not exist:\n\n{path}\n")
         stg = pd.DataFrame()
 
     return stg
