@@ -192,7 +192,7 @@ def set_start_with_burn(m):
 
 def rerun_for_initial_cond(m, nruns):
     for i in range(nruns):
-        infile = pathlib.Path(m.model_ws, 'dis_versions', 'RR10days.dis')
+        infile = pathlib.Path(m.model_ws, 'dis_versions', 'RR30days.dis')
         outfile = pathlib.Path(m.model_ws, 'RR.dis')
         shutil.copyfile(infile, outfile)
         m = basic.load_model()
