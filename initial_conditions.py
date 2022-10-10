@@ -10,7 +10,7 @@ import os
 import matplotlib.pyplot as plt
 import pathlib
 import shutil
-
+import SFRtoSWR
 import flopy.utils.binaryfile as bf
 
 import warnings
@@ -200,6 +200,7 @@ def rerun_for_initial_cond(m, nruns):
         success, buffer = m.run_model(silent=False, )
         if success:
             set_starting_heads(m, None, False)
+            SFRtoSWR.write_start_stage(sfr_filt=None, m=m, use_thalweg=False)
         else:
             raise AssertionError('model did not run succseffully')
 

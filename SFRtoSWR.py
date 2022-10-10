@@ -167,48 +167,6 @@ def run(run_name):
         sfr_filt.loc[:,['rno', 'top']].to_csv('RR_2022/inputs/dataset_14a.txt', sep = ' ', index = False)
 
 
-    def write_start_stage(sfr_filt, stage_shift_from_mod_top = .5, use_thalweg = True, kper = None):
-        '''
-        uses ending heads of last model run to create new starting heads
-        '''
-        path = pathlib.Path(m.model_ws, 'Results', 'ISWRPSTG.dat')
-        # path = os.path.join
-        if path.exists() and (os.path.getsize(path)>1000):
-            ISWRPSTG = pd.read_csv(path).rename(columns = lambda x: x.strip())
-            ISWRPSTG = ISWRPSTG.set_index(['TOTIME','SWRDT','KPER','KSTP','KSWR'])
-
-            if kper is not None:
-                filt = f"KPER=={kper}"
-                print(f'selecting starting heads with {filt}')
-                ISWRPSTG = ISWRPSTG.query(filt)
-
-            endh= ISWRPSTG.tail().mean().dropna().to_frame('endheads')
-        else:
-            class obj:
-                def __init__(self):
-                    self.shape = [0,0]
-
-            endh = obj()
-
-
-        if endh.shape[0] == sfr_filt.shape[0] and not use_thalweg:
-            print('using ending stage values from previous run')
-            endh.insert(0,'reach', value  = np.arange(endh.shape[0]) + 1 )
-            # display(endh.head())
-            endh.rename(columns = {'reach':'#rno'}).to_csv('RR_2022/inputs/start_stage.tab',
-                                                           sep = ',', index = False, header = False)
-            return endh
-        else:
-            print('using stream thalwegs')
-            df = pd.read_csv(os.path.join('RR_2022/inputs/stream_thalwegs.txt'))
-            df.loc[:,'thalwegs'] = df.loc[:,'thalweg']+stage_shift_from_mod_top
-            print(f'using thalweg + {stage_shift_from_mod_top:.2f}ft for each reach starting stage')
-
-            df.loc[:,['reach','thalweg']].rename(columns = {'reach':'#rno'}).to_csv('RR_2022/inputs/start_stage.tab',
-                                     header = False, sep = ',', index = False)
-
-            return df.loc[:,['reach','thalweg']].rename(columns = {'reach':'#rno'})
-
     def plot_swr(sfr_filt):
         fig,ax = plt.subplots()
 
@@ -246,7 +204,7 @@ def run(run_name):
 
     print('done with main processing, still need to do geometry processing')
     if set_start_stage:
-        endh = write_start_stage(sfr_filt, stage_shift_from_mod_top =.51, use_thalweg = use_thalweg, kper = kper)
+        endh = write_start_stage(sfr_filt,m, stage_shift_from_mod_top =.51, use_thalweg = use_thalweg, kper = kper)
         print(f'setting new stages from old run. using kper {kper} as extraction period')
     else:
         print('not setting new starting stages from old run.')
@@ -564,5 +522,54 @@ def plot_start_stage(endh, out_folder):
     ax.set_ylabel('feet, elevation')
     plt.savefig(os.path.join(out_folder, 'start_stage.png'))
 
+def write_start_stage(sfr_filt, m,  stage_shift_from_mod_top=.5, use_thalweg=True, kper=None):
+    '''
+
+    uses ending heads of last model run to create new starting heads
+
+    :param sfr_filt: can be None or sfr_filt
+    :param stage_shift_from_mod_top:
+    :param use_thalweg:
+    :param kper:
+    :return:
+    '''
 
 
+    path = pathlib.Path(m.model_ws, 'Results', 'ISWRPSTG.dat')
+    # path = os.path.join
+    if path.exists() and (os.path.getsize(path) > 1000):
+        ISWRPSTG = pd.read_csv(path).rename(columns=lambda x: x.strip())
+        ISWRPSTG = ISWRPSTG.set_index(['TOTIME', 'SWRDT', 'KPER', 'KSTP', 'KSWR'])
+
+        if kper is not None:
+            filt = f"KPER=={kper}"
+            print(f'selecting starting heads with {filt}')
+            ISWRPSTG = ISWRPSTG.query(filt)
+
+        endh = ISWRPSTG.tail().mean().dropna().to_frame('endheads')
+    else:
+        class obj:
+            def __init__(self):
+                self.shape = [0, 0]
+
+        endh = obj()
+
+    okay_shape = True if sfr_filt is None else endh.shape[0] == sfr_filt.shape[0]
+
+    if okay_shape and not use_thalweg:
+        print('using ending stage values from previous run')
+        endh.insert(0, 'reach', value=np.arange(endh.shape[0]) + 1)
+        # display(endh.head())
+        endh.rename(columns={'reach': '#rno'}).to_csv('RR_2022/inputs/start_stage.tab',
+                                                      sep=',', index=False, header=False)
+        return endh
+    else:
+        print('using stream thalwegs')
+        df = pd.read_csv(os.path.join('RR_2022/inputs/stream_thalwegs.txt'))
+        df.loc[:, 'thalwegs'] = df.loc[:, 'thalweg'] + stage_shift_from_mod_top
+        print(f'using thalweg + {stage_shift_from_mod_top:.2f}ft for each reach starting stage')
+
+        df.loc[:, ['reach', 'thalweg']].rename(columns={'reach': '#rno'}).to_csv('RR_2022/inputs/start_stage.tab',
+                                                                                 header=False, sep=',', index=False)
+
+        return df.loc[:, ['reach', 'thalweg']].rename(columns={'reach': '#rno'})

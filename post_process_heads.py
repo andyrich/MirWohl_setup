@@ -102,11 +102,12 @@ def run(run_name, head_frequency = 5, add_basemap = False):
 
 
     times = hdsobj.get_times()[::head_frequency]
-    gallery = list()
 
-    fig, axes = plt.subplots(1, 3, figsize=(20, 8.5), subplot_kw=dict(projection=ccrs.epsg(2226)))
-    axes = axes.flat
-    for cnt,time in enumerate(times):
+    gallery = list()
+    for cnt, time in enumerate(times):
+        fig, axes = plt.subplots(1, 3, figsize=(20, 8.5), subplot_kw=dict(projection=ccrs.epsg(2226)))
+        axes = axes.flat
+
         hds = hdsobj.get_data(totim = time)
 
         date = pd.to_datetime(datestart) + pd.to_timedelta(time, unit = 's')
@@ -122,7 +123,7 @@ def run(run_name, head_frequency = 5, add_basemap = False):
             # im = axes[i].imshow(hdslayer, vmin=0, vmax=75)
             axes[i].set_title("Layer {}".format(i + 1))
             ma = np.ma.array(hdslayer,mask = m.bas6.ibound.array[i]==0)
-            quadmesh = mapview.plot_array(ma, vmax = 50,vmin  =20,cmap = 'gist_ncar_r')
+            quadmesh = mapview.plot_array(ma, vmax = 50,vmin  =10,cmap = 'gist_ncar_r')
             # ctr = axes[i].contour(ma, colors="k", linewidths=0.5, vmin = 0, vmax = 75)
 
             set_bounds(axes[i], 'mirabel')
@@ -141,6 +142,7 @@ def run(run_name, head_frequency = 5, add_basemap = False):
         filename = f'Day{cnt}.png'
         plt.savefig(os.path.join(out_folder, 'wl_maps',filename), bbox_inches = 'tight')
 
+        del fig
 
         gal = """<div class="gallery">
           <a target="_blank" href="wl_maps/{:}">

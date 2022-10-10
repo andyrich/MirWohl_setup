@@ -59,25 +59,25 @@ def setup_folder(run_name):
     def replace(src, dst):
         shutil.copyfile(src, dst)
 
-    replace(src = 'website_info/subindex.html',
+    replace(src = 'versions/website_info/subindex.html',
             dst = os.path.join('versions', run_name, 'subindex.html'))
 
-    replace(src = 'website_info/gallery.html',
+    replace(src = 'versions/website_info/gallery.html',
             dst = os.path.join('versions', run_name, 'gallery.html'))
 
-    replace(src = 'website_info/reach_numbers.png',
+    replace(src ='versions/website_info/reach_numbers.png',
             dst = os.path.join('versions', run_name, 'reach_numbers.png'))
 
-    replace(src = 'website_info/sfr_swr_map.png',
+    replace(src = 'versions/website_info/sfr_swr_map.png',
             dst = os.path.join('versions', run_name, 'sfr_swr_map.png'))
 
-    replace(src = 'website_info/SWR Reaches.png',
+    replace(src = 'versions/website_info/SWR Reaches.png',
             dst = os.path.join('versions', run_name, 'SWR Reaches.png'))
 
-    replace(src = 'website_info/xsect_locs.png',
+    replace(src = 'versions/website_info/xsect_locs.png',
             dst = os.path.join('versions', run_name, 'xsect_locs.png'))
 
-    replace(src = 'website_info/lay 1 top.png',
+    replace(src = 'versions/website_info//lay 1 top.png',
             dst = os.path.join('versions', run_name, 'lay 1 top.png'))
 
 
@@ -383,3 +383,8 @@ def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
     fig.suptitle(title)
 
     return fig, axupper, axlower
+
+def write_run_name_to_file(run, state = 'started'):
+    with open(os.path.join('versions', 'current_run.txt'), 'w') as wrt:
+        wrt.write(f"{run}\n")
+        wrt.write(state)

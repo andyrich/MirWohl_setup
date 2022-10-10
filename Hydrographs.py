@@ -143,7 +143,12 @@ def run(run_name, reload = False):
 
         plt.savefig(filename,dpi = 250, bbox_inches ='tight')
 
+        plt.close()
+        plt.close(plt.gcf())
+        plt.close('all')
+        plt.clf()
 
+        del nwp
 
 
 def get_ts(idx,hdsobj, datestart, ):
