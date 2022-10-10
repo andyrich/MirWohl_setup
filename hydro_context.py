@@ -62,15 +62,6 @@ def get_data( reload = False):
     total = total.rename(columns = {'rrtotal': "Russian River + Dry Creek"})
     
     return rr, dry, mw, total
-    
-
-
-    
-    
-    
-
-
-# In[3]:
 
 
 def make_quarterly(df):
@@ -128,12 +119,6 @@ def plot(rr, dry, mw, total):
     [axi.set_ylabel('cfs') for axi in ax]
     plt.savefig('versions/website_info//quarterly_flows_ts_set.png',dpi = 300, bbox_inches = 'tight')
     
-    
-
-
-# In[4]:
-
-
 def make_mean_q(total):
     t = make_quarterly(total)
 
@@ -155,8 +140,6 @@ def make_mean_q(total):
 
     plt.savefig('versions/website_info//quarterly_flows.png',dpi = 300, bbox_inches = 'tight')
     
-
-
 
 def wells(name):
     print('running wel creation package')
@@ -185,28 +168,6 @@ def wells(name):
     df = df/43560.
     
     return  df
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[6]:
 
 
 def quarterly_plot(wells_df):    
@@ -244,22 +205,6 @@ def quarterly_plot(wells_df):
 
     plt.savefig('versions/website_info//total_yearly_pumping.png',dpi = 300, bbox_inches = 'tight')
 
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[7]:
-
-
 def plot_total_by_season(wells_df):
     fig, ax = plt.subplots(6,1, sharex = True, sharey = True, figsize = (10,6), )
     # plt.yscale("log")
@@ -282,9 +227,6 @@ def plot_total_by_season(wells_df):
 
     plt.suptitle('Total Pumping per Caisson, by Season')
     plt.savefig('versions/website_info//seasonal_pumping.png',dpi = 300, bbox_inches = 'tight')
-
-
-# In[8]:
 
 
 def plot_total_by_season_ts(wells_df):
@@ -310,22 +252,3 @@ def plot_total_by_season_ts(wells_df):
 
     plt.suptitle('Total Pumping per Caisson, by Season')
     plt.savefig('versions/website_info//seasonal_pumping_ts.png',dpi = 300, bbox_inches = 'tight')
-
-
-# In[9]:
-
-
-
-
-
-# In[10]:
-
-
-
-
-
-# In[11]:
-
-
-
-
