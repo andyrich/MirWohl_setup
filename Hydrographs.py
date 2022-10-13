@@ -16,6 +16,7 @@ import pathlib
 import basic
 import matplotlib.dates as mdates
 import conda_scripts.gwplot_fancy as gwp
+import warnings
 
 
 def run(run_name, reload = False):
@@ -80,7 +81,7 @@ def run(run_name, reload = False):
                                                              name = 'Monitoring Wells')
 
     ibound.explore(m = m, style_kwds = {'weight':1,'fill':False}, name = 'Model Boundary')
-    swr.explore(m = m, style_kwds = {'weight':3,'fill':True, 'color':'green'}, name = "SWR Cells")
+    swr.explore(m = m, style_kwds = {'weight':3,'fill':True, 'color':'black'}, name = "SWR Cells")
     sfr.explore(m = m, style_kwds = {'weight':3,'fill':True, 'color':'grey'}, name = 'SFR Cells')
 
 
@@ -91,6 +92,8 @@ def run(run_name, reload = False):
     hds, hdsobj = basic.get_heads(ml)
 
     partics = os.path.join(out_folder,'hydrographs')
+
+    obsall = pd.DataFrame()
 
     for _,  wel in wells_mod.iterrows():
         station_name = wel['station_name']
@@ -105,6 +108,18 @@ def run(run_name, reload = False):
             skip_gw_data = False
         else:
             skip_gw_data = True
+            predvobs = head.join(obs.rename(columns={'Value': 'Observed'}))
+            if predvobs.shape[0] == obs.shape[0]:
+                warnings.warn(f"shapes not matching in setup for 1 to 1 in Hydrographs. missing values are" \
+                            f"\n{obs.index[~obs.index.isin(head.index)]}" \
+                            f"\nshape of simulated {head.shape}\n" \
+                            f"shape of observed {obs.shape}\n" \
+                            f"shape of predvobs {predvobs.shape}\n" \
+                            f"index of simulated\n{head.index}\n" \
+                            f"index of observed\n{obs.index}\n"\
+                            f"index of predvobs\n{predvobs.index}\n")
+
+            obsall = obsall.append(predvobs)
 
         f = wel['station_no']
 
@@ -150,6 +165,25 @@ def run(run_name, reload = False):
 
         del nwp
 
+    plot_one_to_one(obsall, out_folder)
+
+def plot_one_to_one(obsall, out_folder):
+    fig = plt.figure(figsize = (6,6))
+    ax = plt.subplot()
+    l = [obsall.loc[:,['Simulated','Observed']].describe().loc['min'].min(),
+         obsall.loc[:,['Simulated','Observed']].describe().loc['max'].max()]
+    z = [obsall.loc[:,['Simulated','Observed']].describe().loc['min'].min(),
+         obsall.loc[:,['Simulated','Observed']].describe().loc['max'].max()]
+    ax.plot(l, z, ls='-', color='k')
+
+    ax.scatter(obsall.loc[:,'Observed'], obsall.loc[:,'Simulated'], marker = 'o', alpha =.5)
+
+    ax.set_xlabel('Observed (ft)')
+    ax.set_ylabel('Simulated (ft')
+    ax.grid(True)
+    ax.axis('equal')
+
+    plt.savefig(os.path.join(out_folder, '1to1.png'), dpi = 250, bbox_inches= 'tight')
 
 def get_ts(idx,hdsobj, datestart, ):
     ts = hdsobj.get_ts(idx)
