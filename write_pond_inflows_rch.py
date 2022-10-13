@@ -17,9 +17,10 @@ import cartopy.crs as ccrs
 import pathlib
 
 
-def run(name, draw_maps = True):
+def run(name, m = None, draw_maps = True):
     print('running pond inflows recharge package')
-    m = basic.load_model(name)
+    if m is None:
+        m = basic.load_model(name)
 
     info, swr_info, sfr_info, riv_keys_info = basic.load_params(name)
 
