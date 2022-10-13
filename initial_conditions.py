@@ -190,12 +190,19 @@ def set_start_with_burn(m):
 
 
 
-def rerun_for_initial_cond(m, nruns):
+def rerun_for_initial_cond(m, nruns, path = None):
     for i in range(nruns):
-        infile = pathlib.Path(m.model_ws, 'dis_versions', 'RR30days.dis')
+        infile = pathlib.Path(m.model_ws, 'dis_versions', 'RR60days.dis')
         outfile = pathlib.Path(m.model_ws, 'RR.dis')
         shutil.copyfile(infile, outfile)
-        m = basic.load_model()
+
+        infile = pathlib.Path(m.model_ws, 'oc_versions', 'rr_60day.oc')
+        outfile = pathlib.Path(m.model_ws, 'rr_all.oc')
+        shutil.copyfile(infile, outfile)
+
+        if m is None:
+            m = basic.load_model(path = path)
+
         print(f"running {i + 1} of {nruns}")
         success, buffer = m.run_model(silent=False, )
         if success:
@@ -206,6 +213,18 @@ def rerun_for_initial_cond(m, nruns):
 
     infile = pathlib.Path(m.model_ws, 'dis_versions', 'RR109days.dis')
     outfile = pathlib.Path(m.model_ws, 'RR.dis')
+    shutil.copyfile(infile, outfile)
+
+    infile = pathlib.Path(m.model_ws, 'oc_versions', 'rr_all.oc')
+    outfile = pathlib.Path(m.model_ws, 'rr_all.oc')
+    shutil.copyfile(infile, outfile)
+
+    infile = pathlib.Path(m.model_ws, 'oc_versions', 'RR.wel')
+    outfile = pathlib.Path(m.model_ws, 'RR.wel')
+    shutil.copyfile(infile, outfile)
+
+    infile = pathlib.Path(m.model_ws, 'oc_versions', 'RRMF.rch')
+    outfile = pathlib.Path(m.model_ws, 'RRMF.rch')
     shutil.copyfile(infile, outfile)
 
     return success
