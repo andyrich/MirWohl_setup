@@ -6,7 +6,7 @@ import geopandas as gpd
 import contextily as ctx
 import pandas as pd
 import numpy as np
-import os
+import os, pathlib
 import matplotlib.pyplot as plt
 import conda_scripts.make_map as mp
 import flopy.utils.binaryfile as bf
@@ -80,6 +80,28 @@ def setup_folder(run_name):
     replace(src = 'versions/website_info//lay 1 top.png',
             dst = os.path.join('versions', run_name, 'lay 1 top.png'))
 
+def reset_model_files(path):
+    '''
+    reset model files. because some model runs fail, need to replace files that have wrong number of stress periods.
+    :param m:
+    :return:
+    '''
+    infile = pathlib.Path(path, 'dis_versions', 'RR109days.dis')
+    outfile = pathlib.Path(path, 'RR.dis')
+    shutil.copyfile(infile, outfile)
+
+    infile = pathlib.Path(path, 'oc_versions', 'rr_all.oc')
+    outfile = pathlib.Path(path, 'rr_all.oc')
+    shutil.copyfile(infile, outfile)
+
+    infile = pathlib.Path(path, 'oc_versions', 'RR.wel')
+    outfile = pathlib.Path(path, 'RR.wel')
+    shutil.copyfile(infile, outfile)
+
+    infile = pathlib.Path(path, 'oc_versions', 'RRMF.rch')
+    outfile = pathlib.Path(path, 'RRMF.rch')
+    shutil.copyfile(infile, outfile)
+
 
 def copy_mod_files(run_name, path=None):
     '''
@@ -129,7 +151,7 @@ def out_folder(run_name = 'June2015'):
     
     return os.path.join('versions', info['name'])
 
-def load_model(verbose = False, path = None, nam = 'RRMF.nam'):
+def load_model(verbose = False, path = None, nam = 'RRMF.nam', check = False, forgive = True):
     
     if path is None:
         path = 'RR_2022'
@@ -139,8 +161,10 @@ def load_model(verbose = False, path = None, nam = 'RRMF.nam'):
                                     # load_only= ['DIS', 'BAS6'],
                                     model_ws = path,
                                     verbose = verbose,
+                                    forgive=forgive,
                                     version = 'mfnwt', 
-                                    exe_name = "RR_2022/MODFLOW-NWT_64")
+                                    exe_name = f"{path}/MODFLOW-NWT_64",
+                                    check = check)
     
     
     return ml
@@ -388,3 +412,51 @@ def write_run_name_to_file(run, state = 'started'):
     with open(os.path.join('versions', 'current_run.txt'), 'w') as wrt:
         wrt.write(f"{run}\n")
         wrt.write(state)
+
+    if state == 'ended':
+        with open(os.path.join('versions', 'allruns.txt'), 'a') as wrt:
+            wrt.write(f"{run}\n")
+
+def check_runs(allruns):
+    '''
+    find which runs have not beend done. check versions/allruns.txt
+    :param allruns:
+    :return:
+    '''
+
+    file = os.path.join('versions', 'allruns.txt')
+
+    if os.path.exists(file):
+        with open(file, 'r') as wrt:
+            done = wrt.readlines()
+
+        done = [r.strip('\n') for r in done]
+
+        print(f'These have already been run:\n{done}\n')
+    else:
+        done = list()
+
+    notdone = [x for x in allruns if not (x in done)]
+
+    print(f'These have not yet ben run:\n{notdone}\n')
+
+    return notdone
+
+
+
+def offset_start_date(run, daysoffset = 30):
+    '''
+    get a start date of 30 days ahead of model start. used for running for initial conditions.
+    :param run:
+    :param daysoffset:
+    :return: string date
+    '''
+
+    info, swr_info, sfr_info, riv_keys_info = load_params(run)
+    datestart = info['start_date']
+
+    date = pd.to_datetime(datestart) - pd.to_timedelta(daysoffset, unit='D')
+
+    date = date.strftime("%m/%d/%Y")
+
+    return date
