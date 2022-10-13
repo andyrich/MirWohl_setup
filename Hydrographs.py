@@ -19,7 +19,7 @@ import conda_scripts.gwplot_fancy as gwp
 import warnings
 
 
-def run(run_name, reload = False):
+def run(run_name, reload = False,ml = None):
     '''
 
     :param run_name: to load from run_names.txt
@@ -37,7 +37,8 @@ def run(run_name, reload = False):
     print(datestart)
     print(out_folder)
 
-    ml = basic.load_model()
+    if ml is None:
+        ml = basic.load_model()
 
 
     ibound = gpd.read_file("GIS/iboundlay1.shp")

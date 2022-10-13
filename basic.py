@@ -25,7 +25,7 @@ def load_params(run_name = 'calibration'):
 
     import json
 
-    with open("run_names.txt") as json_data_file:
+    with open("run_names.json") as json_data_file:
         data = json.load(json_data_file)
     
     info = data[run_name]
@@ -80,13 +80,13 @@ def setup_folder(run_name):
     replace(src = 'versions/website_info//lay 1 top.png',
             dst = os.path.join('versions', run_name, 'lay 1 top.png'))
 
-def reset_model_files(path):
+def reset_model_files(path, ndays = 365):
     '''
     reset model files. because some model runs fail, need to replace files that have wrong number of stress periods.
     :param m:
     :return:
     '''
-    infile = pathlib.Path(path, 'dis_versions', 'RR109days.dis')
+    infile = pathlib.Path(path, 'dis_versions', f'RR{ndays}days.dis')
     outfile = pathlib.Path(path, 'RR.dis')
     shutil.copyfile(infile, outfile)
 

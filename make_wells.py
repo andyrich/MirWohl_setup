@@ -8,7 +8,15 @@ import matplotlib.pyplot as plt
 import os
 import warnings
 
-def run(name,m = None, numdays = None, datestart = None):
+def run(name, m = None, numdays = None, datestart = None):
+    '''
+    create new mf wel file
+    :param name:
+    :param m:
+    :param numdays:
+    :param datestart:
+    :return: df of wel timeseries
+    '''
 
     if m is None:
         m = basic.load_model()
@@ -118,7 +126,8 @@ def get_period(df, start_date, numdays, assign_per = True):
 
     # df.loc[:, 'Value'] = df.loc[:, 'Value'].interpolate()
 
-    assert (df.sum(axis=1)>0).all(), f"there are {(df.sum(axis=1) == 0).count()} days with zero Q values"
+    assert (df.sum(axis=1) == 0).sum() == 0, f"there are {(df.sum(axis=1) == 0).sum()} days with zero Q values\n" \
+                                           f"the df looks like:\n{df.head()}\n{df.tail()}\n"
     assert df.index.nunique()==numdays, f'repeating index values in df. nunique=={df.index.nunique()}'
     assert df.shape[0]==numdays, f'shape of df is wrong, should be {numdays} but is {df.shape[0]}'
     assert df.isnull().sum().sum() == 0, 'has nans'

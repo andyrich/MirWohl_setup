@@ -1,8 +1,8 @@
 {
         "June2020":{
                     "name":"June2020",
-                    "start_date":"4/15/2020",
-                    "numdays":109,
+                    "start_date":"1/1/2020",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -36,8 +36,8 @@
         
         "June2019":{
                     "name":"June2019",
-                    "start_date":"4/15/2019",
-                    "numdays":109,
+                    "start_date":"1/1/2019",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -73,8 +73,8 @@
 
         "June2018":{
                     "name":"June2018",
-                    "start_date":"4/15/2018",
-                    "numdays":109,
+                    "start_date":"1/1/2018",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -108,8 +108,8 @@
         
         "June2017":{
                     "name":"June2017",
-                    "start_date":"4/15/2017",
-                    "numdays":109,
+                    "start_date":"1/1/2017",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -145,8 +145,8 @@
 
     "June2016":{
                     "name":"June2016",
-                    "start_date":"4/15/2016",
-                    "numdays":109,
+                    "start_date":"1/1/2016",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -180,8 +180,8 @@
         
         "June2015":{
                     "name":"June2015",
-                    "start_date":"4/15/2015",
-                    "numdays":109,
+                    "start_date":"1/1/2015",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -214,8 +214,8 @@
                     },
         "June2014":{
                     "name":"June2014",
-                    "start_date":"4/15/2014",
-                    "numdays":109,
+                    "start_date":"1/1/2014",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -249,8 +249,8 @@
 
         "June2013":{
                     "name":"June2013",
-                    "start_date":"4/15/2013",
-                    "numdays":109,
+                    "start_date":"1/1/2013",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -286,7 +286,7 @@
         "June2012":{
                     "name":"June2012",
                     "start_date":"6/15/2012",
-                    "numdays":109,
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 

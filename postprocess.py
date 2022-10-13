@@ -15,7 +15,7 @@ import flopy.utils.mflistfile as mflist
 import pathlib
 
 
-def run(model_name, ponds_only = False, riv_only = False, plot_buds = True):
+def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = None):
     '''
 
     :param model_name:
@@ -25,7 +25,8 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True):
     :return:
     '''
 
-    m = basic.load_model(verbose = False)
+    if m is None:
+        m = basic.load_model(verbose = False)
 
     info, swr_info, sfr_info, riv_keys_info = basic.load_params(model_name)
 

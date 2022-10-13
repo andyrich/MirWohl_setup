@@ -54,7 +54,7 @@ def run(name, m = None, draw_maps = True):
     plt.savefig(os.path.join(out_folder, 'pondQ.png'), dpi=250)
 
     cnt = 0
-    df_cur_roll.to_csv(f"RR_2022/pond_inflows/sum.csv")
+    # df_cur_roll.to_csv(f"RR_2022/pond_inflows/sum.csv")
 
     rech = {}
 

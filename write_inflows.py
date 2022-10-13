@@ -77,7 +77,7 @@ def run(model_name, m = None, minvalue = 29.54,
     for ind, d in stg.iterrows():
         # print(d['Value'])
         # print(ind)
-        name = f"RR_2022/ref/dam_stage/day{cnt}.dat"
+        name = os.path.join(m.model_ws, f"ref/dam_stage/day{cnt}.dat")
         # print(name)
         with open(name,'w') as out:
             out.write(f.format(d['Value'], ind.strftime("%y %b %d")))

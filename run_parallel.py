@@ -38,7 +38,7 @@ def copyfiles(run):
 
     return new_folder
 
-def par_run(run, path, numdays = 109):
+def par_run(run, path, numdays = 365, do_pre_run = False):
     '''
     run single model with name 'run' in the path.
     :param run:
@@ -62,18 +62,20 @@ def par_run(run, path, numdays = 109):
 
 
 
+    if do_pre_run:
+        # SFRtoSWR.run(run)
+        # SFR_calibrate.run(run)
+        write_pond_inflows_rch.run(run, m = m)
 
-    # SFRtoSWR.run(run)
-    # SFR_calibrate.run(run)
-    write_pond_inflows_rch.run(run, m = m)
+        datestart_initial = basic.offset_start_date(run, 60)
 
-    datestart_initial = basic.offset_start_date(run, 60)
+        write_inflows.run(model_name=run, m = m, numdays=numdays, datestart=datestart_initial)
+        make_wells.run(name=run, m = m, datestart=datestart_initial, numdays=numdays)
 
-    write_inflows.run(model_name=run, m = m, numdays=numdays, datestart=datestart_initial)
-    make_wells.run(name=run, m = m, datestart=datestart_initial, numdays=numdays)
+        success = initial_conditions.rerun_for_initial_cond(m, 1)
 
-    success = initial_conditions.rerun_for_initial_cond(m, 1)
-    m = basic.load_model(path = path)
+        m = basic.load_model(path = path)
+
     make_wells.run(name=run, m = m)
     write_inflows.run(model_name=run, m = m)
     write_pond_inflows_rch.run(run, m = m)
@@ -84,12 +86,19 @@ def par_run(run, path, numdays = 109):
     basic.copy_mod_files(run)
 
     if success:
-        Hydrographs.run(run_name=run, reload = True)
-        postprocess.run(run, riv_only = True)
+        Hydrographs.run(run_name=run, reload = True, ml = m)
+        postprocess.run(run, riv_only = True, m= m)
 
-        post_process_heads.run(run_name=run, head_frequency=5, add_basemap=False)
-        # zone_bud.run(run)
+        post_process_heads.run(run_name=run, head_frequency=10, add_basemap=False, m = m)
+        # zone_bud.run(run, ml = m)
         basic.write_run_name_to_file(run, 'ended')
+
+        try:
+            p = os.path.join('initial_heads', run)
+            os.mkdir(p)
+            initial_conditions.set_starting_heads(m, plot = False, alt_outpath=p)
+        except:
+            print('did not copy final heads')
 
     plt.close()
     plt.close(plt.gcf())
