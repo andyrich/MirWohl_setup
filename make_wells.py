@@ -121,6 +121,10 @@ def get_period(df, start_date, numdays, assign_per = True):
     df = df.resample("1D").mean()
     df = df.reindex(index = pd.date_range(start_date, periods = numdays, freq = 'D'))
     df = df.bfill().ffill()
+
+    c = df.sum(axis=1) == 0
+
+    df.loc[c,:] = df.mean().mean()
     # df = df.loc[start_date:end_days, :]
     # df = df.resample("1D").mean()
 
@@ -161,7 +165,7 @@ def plot_pumping(df, out_folder):
     ax = df.droplevel(1,0).rename(lambda x: pd.to_datetime(x).strftime("%b\n%d\n%Y")).mul(1/43560).plot.bar(
         stacked = True, figsize = (9,6), ylabel = 'acre-feet', grid = True, title = "Total Caisson Pumping, per Well")
 
-    ax.set_xticks(ax.get_xticks()[::7])
+    ax.set_xticks(ax.get_xticks()[::15])
     ax.tick_params(axis="x", rotation=0)
     
     plt.savefig(os.path.join(out_folder, 'pumping.png'), dpi=250, bbox_inches = 'tight')

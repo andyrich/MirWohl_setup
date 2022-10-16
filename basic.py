@@ -408,10 +408,10 @@ def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
 
     return fig, axupper, axlower
 
-def write_run_name_to_file(run, state = 'started'):
-    with open(os.path.join('versions', 'current_run.txt'), 'w') as wrt:
-        wrt.write(f"{run}\n")
-        wrt.write(state)
+def write_run_name_to_file(run, state = 'started', mode = 'w'):
+    with open(os.path.join('versions', 'current_run.txt'), mode = mode) as wrt:
+        wrt.write(f"{run} -- {state}\n")
+        # wrt.write(state)
 
     if state == 'ended':
         with open(os.path.join('versions', 'allruns.txt'), 'a') as wrt:

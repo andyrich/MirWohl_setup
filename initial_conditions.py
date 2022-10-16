@@ -126,11 +126,14 @@ def set_starting_heads(m, kper = None, plot = False, alt_outpath = None):
             # ctr = axes[i].contour(hdslayer, colors="k", linewidths=0.5, vmax = 80,vmin  =20,cmap = 'gist_ncar_r')
 
 
-    if plot:
+
         # fig.delaxes(axes[-1])
         fig.subplots_adjust(right=0.8)
         cbar_ax = fig.add_axes([0.85, 0.15, 0.03, 0.7])
         fig.colorbar(quadmesh, cax=cbar_ax, label="Head")
+
+    else:
+        fig = None
 
 
     return fig

@@ -14,6 +14,7 @@ import zone_bud
 import os
 import shutil
 import sys
+from shutil import copytree, ignore_patterns
 
 def copyfiles(run):
 
@@ -25,11 +26,12 @@ def copyfiles(run):
     if os.path.exists(new_folder):
         try:
             shutil.rmtree(new_folder, ignore_errors=True)
+            print(f'removed folder {new_folder}')
         except:
-            print('could not remove folder')
+            print(f'could not remove folder {new_folder}')
 
     try:
-        shutil.copytree(EXE_DIR, new_folder)
+        shutil.copytree(EXE_DIR, new_folder, ignore = ignore_patterns('*.git'))
     except:
         shutil.rmtree(os.path.join(new_folder))
 
@@ -52,7 +54,7 @@ def par_run(run, path, numdays = 365, do_pre_run = False):
     print(run)
     basic.setup_folder(run)
     basic.reset_model_files(path = path)
-    basic.write_run_name_to_file(run, 'started')
+    basic.write_run_name_to_file(run, 'started', mode = 'a')
     m = basic.load_model(path=path)
     print(f"model ws {m.model_ws}")
     print(f"model exe {m.exe_name}")
@@ -83,22 +85,28 @@ def par_run(run, path, numdays = 365, do_pre_run = False):
 
     success, buffer = m.run_model(silent = False)
 
+    # success = True
+
     basic.copy_mod_files(run)
 
     if success:
-        Hydrographs.run(run_name=run, reload = True, ml = m)
-        postprocess.run(run, riv_only = True, m= m)
-
-        post_process_heads.run(run_name=run, head_frequency=10, add_basemap=False, m = m)
-        # zone_bud.run(run, ml = m)
-        basic.write_run_name_to_file(run, 'ended')
-
         try:
+            basic.write_run_name_to_file(run, 'successful', mode = 'a')
+            Hydrographs.run(run_name=run, reload = True, ml = m)
+            postprocess.run(run, riv_only = True, m= m)
+
+            post_process_heads.run(run_name=run, head_frequency=10, add_basemap=False, m = m)
+            # zone_bud.run(run, ml = m)
+
             p = os.path.join('initial_heads', run)
-            os.mkdir(p)
             initial_conditions.set_starting_heads(m, plot = False, alt_outpath=p)
-        except:
-            print('did not copy final heads')
+            basic.write_run_name_to_file(run, 'completed post processing', mode='a')
+
+        except Exception as e:
+            basic.write_run_name_to_file(run, e, mode='a')
+
+    else:
+        basic.write_run_name_to_file(run, 'failed', mode='a')
 
     plt.close()
     plt.close(plt.gcf())
