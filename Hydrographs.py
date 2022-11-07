@@ -17,11 +17,13 @@ import basic
 import matplotlib.dates as mdates
 import conda_scripts.gwplot_fancy as gwp
 import warnings
+from flopy.utils import ZoneBudget
+import conda_scripts.plot_help as ph
 
-
-def run(run_name, reload = False,ml = None):
+def run(run_name, reload=False, ml=None, plot_well_locs = True, plot_hydros = True, skip_fancy = False ):
     '''
 
+    :param ml:
     :param run_name: to load from run_names.txt
     :param reload: if true will load from spreadsheets, wiski, etc and create file. False will just re-load old file.
     :return: None
@@ -40,153 +42,202 @@ def run(run_name, reload = False,ml = None):
     if ml is None:
         ml = basic.load_model()
 
-
-    ibound = gpd.read_file("GIS/iboundlay1.shp")
-    ibound = ibound.query("ibound_1==1")
-
-    swr = gpd.read_file("GIS/SWR_Reaches.shp")
-
-    sfr = gpd.read_file('SFR_files/only_sfr_cells.shp')
-
     if reload:
         print('loading data from wiski, spreadsheets, etc')
-        wiski_meta = get_wiski()
-        wells = get_well_locations()
-
-        wells_mod = pd.merge(wiski_meta, wells.loc[:,['Well Name','Filename',
-                    'WISKI','Notes_SX', 'Notes_SRM',
-                    'USGS Map ID (https://pubs.usgs.gov/ds/610/pdf/ds610.pdf)','USGS NWIS ID',
-                    'WCR (Y/N)','Total completed depth (ft bgs)', 'Total depth (ft bgs)',
-                    'Screened interval (ft bgs)', 'casing diameter (inches)',]] ,
-                    left_on = 'station_name', right_on = 'WISKI', how = 'inner')
-
-        wells_mod = gpd.GeoDataFrame(wells_mod, geometry = gpd.points_from_xy(wells_mod.station_longitude, wells_mod.station_latitude), crs  = 4326).to_crs(2226)
-
-
-        grid = flopy.utils.gridintersect.GridIntersect(ml.modelgrid)
-
-        inx = [grid.intersect(x, shapetype = 'point').cellids for x in wells_mod.geometry.tolist() ]
-        r = [x[0][0] if len(x)>0 else np.nan for x in inx]
-        c = [x[0][1] if len(x)>0 else np.nan for x in inx]
-        inside = [True if len(x)>0 else False for x in inx]
-
-        wells_mod.loc[:,'i_r'] = r
-        wells_mod.loc[:,'j_c'] = c
-        wells_mod.loc[:,'inmodearea'] = inside
+        wells_mod = load_wells_mod(ml)
     else:
         print('loading wells_mod from file')
         wells_mod = gpd.read_file('GIS/wells_mod.geojson')
 
-    wells_mod.to_html(os.path.join(out_folder, 'observation_wells.html'))
-    m = wells_mod.filter(regex = 'geom|Name|WISKI|Name|depth').explore( marker_kwds = {'radius':5, 'color':'black'},
-                                                             name = 'Monitoring Wells')
+    if plot_well_locs:
+        plot_model_wells(wells_mod = wells_mod, out_folder = out_folder)
 
-    ibound.explore(m = m, style_kwds = {'weight':1,'fill':False}, name = 'Model Boundary')
-    swr.explore(m = m, style_kwds = {'weight':3,'fill':True, 'color':'black'}, name = "SWR Cells")
-    sfr.explore(m = m, style_kwds = {'weight':3,'fill':True, 'color':'grey'}, name = 'SFR Cells')
+    if plot_hydros:
+        obsall = do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = skip_fancy)
+        plot_one_to_one(obsall, out_folder)
+
+        plot_residual(obsall, out_folder=out_folder, ml = ml)
 
 
-    # wiski_meta.explore( marker_kwds = {'radius':5, 'color':'cyan'}, m = m, name = 'Wiski Wells')
-    utils.folium_maps.add_layers(m)
-    m.save(os.path.join(out_folder, 'wells.html'))
+def plot_residual(allobs, out_folder, ml):
+    '''
+    plot residuals from all observations
+    :param allobs:
+    :param out_folder:
+    :param ml:
+    :return:
+    '''
 
+    locs = allobs.drop_duplicates('well').loc[:, ['geometry', 'well']]
+
+    allobs.loc[:, 'residual'] = allobs.loc[:, 'Observed'] - allobs.loc[:, 'Simulated']
+
+    allobs = allobs.drop(columns='geometry').groupby('well').mean().reset_index()
+
+    merged = pd.merge(allobs, locs, on='well')
+    merged = gpd.GeoDataFrame(merged, geometry='geometry', crs=2226)
+
+    fig, ax = basic.map_river(m=ml, add_basemap=True)
+    ph.remove_ctx_annotations(ax)
+    basic.set_bounds(ax)
+
+    merged.plot('residual', markersize=15, edgecolor='k', ax=ax, legend=True,
+                cmap='jet', legend_kwds={'title': 'Residual (Obs. - Sim.)', 'loc': 'upper left',
+                                         'bbox_to_anchor': (1, 1)},
+                classification_kwds={'bins': np.arange(-25, 26, 5)},
+                scheme='UserDefined', zorder=105)
+
+    ph.label_points(ax=ax, gdf=merged, fmt=".1f", colname='residual', basin_name=None)
+
+    ax.text(1, 0, 'Labels are residuals', ha='right', transform=ax.transAxes)
+
+    plt.savefig(os.path.join(out_folder, 'residuals.png'), dpi=250, bbox_inches='tight')
+
+    return fig, ax
+
+def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = False):
+    '''
+    plot all hydrographs
+    :param skip_plotting:
+    :param ml:
+    :param wells_mod:
+    :param out_folder:
+    :param datestart:
+    :param numdays:
+    :return: obsall (predicted versus observed)
+    '''
     hds, hdsobj = basic.get_heads(ml)
 
-    partics = os.path.join(out_folder,'hydrographs')
+    partics = os.path.join(out_folder, 'hydrographs')
 
     obsall = pd.DataFrame()
 
-    for _,  wel in wells_mod.iterrows():
+    for _, wel in wells_mod.iterrows():
         station_name = wel['station_name']
         print(f"plotting {station_name}")
         idx = (0, wel.loc['i_r'], wel.loc['j_c'])
         head = get_ts(idx, hdsobj, datestart)
-        obs = load_obs(wel.loc['Filename'], datestart,numdays=numdays)
+        obs = load_obs(wel.loc['Filename'], datestart, numdays=numdays)
+
+        ymin, ymax = basic.isnumber(wel['ymin']), basic.isnumber(wel['ymax'])
+        ymin = ymin if (not np.isnan(ymin)) else None
+        ymax = ymax if (not np.isnan(ymax)) else None
         # obs = load_obs(wel.loc['Well Name'], datestart,numdays=numdays)
 
-
-        if obs.shape[0]==0:
+        if obs.shape[0] == 0:
             skip_gw_data = False
         else:
             skip_gw_data = True
-            predvobs = head.join(obs.rename(columns={'Value': 'Observed'}))
+            predvobs = head.join(obs.rename(columns={'Value': 'Observed'}), how = 'left')
+
+            predvobs.loc[:, 'zone'] = wel['zone']
+            predvobs.loc[:, 'geometry'] = wel['geometry']
+            predvobs.loc[:, 'well'] = station_name
+
             if predvobs.shape[0] == obs.shape[0]:
                 warnings.warn(f"shapes not matching in setup for 1 to 1 in Hydrographs. missing values are" \
-                            f"\n{obs.index[~obs.index.isin(head.index)]}" \
-                            f"\nshape of simulated {head.shape}\n" \
-                            f"shape of observed {obs.shape}\n" \
-                            f"shape of predvobs {predvobs.shape}\n" \
-                            f"index of simulated\n{head.index}\n" \
-                            f"index of observed\n{obs.index}\n"\
-                            f"index of predvobs\n{predvobs.index}\n")
+                              f"\n{obs.index[~obs.index.isin(head.index)]}" \
+                              f"\nshape of simulated {head.shape}\n" \
+                              f"shape of observed {obs.shape}\n" \
+                              f"shape of predvobs {predvobs.shape}\n" \
+                              f"index of simulated\n{head.index}\n" \
+                              f"index of observed\n{obs.index}\n" \
+                              f"index of predvobs\n{predvobs.index}\n")
 
             obsall = obsall.append(predvobs)
 
-        f = wel['station_no']
+        if skip_plotting:
+            print('not plotting hydrographs')
+        else:
+            f = wel['station_no']
 
-        filename=os.path.join(partics,f'{f}.png')
-        # if not os.path.exists(filename):
-        nwp = gwp.fancy_plot(station_name,group = None,
-                             filename=None,
-                             allinfo=None,
-                             do_regress=False)
+            filename = os.path.join(partics, f'{f}.png')
+            # if not os.path.exists(filename):
+            nwp = gwp.fancy_plot(station_name, group=None,
+                                 filename=None,
+                                 allinfo=None,
+                                 do_regress=False)
 
-        nwp.do_plot(False, skip_gw_data=skip_gw_data,
-                    map_buffer_size = 2500, seasonal = False,
-                    plot_dry = False, plot_wet = False,
-                    maptype = 'ctx.USGS.USTopo')
+            nwp.do_plot(False, skip_gw_data=skip_gw_data,
+                        map_buffer_size=2500, seasonal=False,
+                        plot_dry=False, plot_wet=False,
+                        maptype='ctx.USGS.USTopo')
+
+            head.plot(ax=nwp.upleft)
+            minya, maxya = head.loc[:, 'Simulated'].min(), head.loc[:, 'Simulated'].max()
+            nwp.upleft.set_ylim([minya - 10, maxya + 10])
+            nwp.upleft.set_ylim([ymin, ymax])
+            if np.any([ymin, ymax] == None ):
+                ymin, ymax = nwp.upleft.get_ylim()
+
+            nwp.upleft.set_yticks(np.arange(ymin, ymax+1, 10))
+            nwp.upleft.set_yticks(np.arange(ymin, ymax + 1, 2), minor=True)
+            nwp.upleft.grid(which='major', alpha=0.5)
+            nwp.upleft.grid(which='minor', alpha=0.2)
+
+            if obs.shape[0] > 1:
+                obs.rename(columns={'Value': 'Observed'}).plot(ax=nwp.upleft)
+                # miny, maxy = obs.loc[:, 'Value'].min(), obs.loc[:, 'Value'].max()
+                # nwp.upleft.set_ylim([np.nanmin([miny, minya]) - 10, np.nanmax([maxy, maxya]) + 10])
+
+            if not skip_gw_data:
+                # re-set xlimits because limits fancy plot are set to 1980
+                nwp.upleft.set_xlim(left=head.index.min() - pd.to_timedelta('1 w'),
+                                    right=head.index.max() + pd.to_timedelta('1 w'))
+
+                nwp.upleft.xaxis.set_major_locator(mdates.MonthLocator())
+                nwp.upleft.xaxis.set_minor_locator(mdates.WeekdayLocator())
+                nwp.upleft.xaxis.set_major_formatter(
+                    mdates.ConciseDateFormatter(mdates.MonthLocator()))
+
+            plt.savefig(filename, dpi=250, bbox_inches='tight')
+
+            plt.close()
+            plt.close(plt.gcf())
+            plt.close('all')
+            plt.clf()
+
+            del nwp
+
+    obsall.to_csv(os.path.join(partics, 'all_meas.csv'))
+
+    return obsall
+
+def plot_one_to_one(obsall, out_folder, byzone=True):
 
 
+    l = [obsall.loc[:, ['Simulated', 'Observed']].describe().loc['min'].min(),
+         obsall.loc[:, ['Simulated', 'Observed']].describe().loc['max'].max()]
+    z = [obsall.loc[:, ['Simulated', 'Observed']].describe().loc['min'].min(),
+         obsall.loc[:, ['Simulated', 'Observed']].describe().loc['max'].max()]
 
-        head.plot(ax = nwp.upleft)
-        minya, maxya = head.loc[:,'Simulated'].min(), head.loc[:,'Simulated'].max()
-        nwp.upleft.set_ylim([minya-10, maxya+10])
-        if obs.shape[0]>1:
-            obs.rename(columns = {'Value':'Observed'}).plot(ax = nwp.upleft)
-            miny, maxy = obs.loc[:,'Value'].min(), obs.loc[:,'Value'].max()
-            nwp.upleft.set_ylim([np.nanmin([miny,minya])-10, np.nanmax([maxy,maxya])+10])
+    zones = obsall.zone.unique()
+    n = obsall.zone.nunique()
 
-        if not skip_gw_data:
-            # re-set xlimits because limits fancy plot are set to 1980
-            nwp.upleft.set_xlim(left = head.index.min()-pd.to_timedelta('1 w'),
-                                right = head.index.max()+pd.to_timedelta('1 w'))
+    fig, axes = plt.subplots(1, n, sharey = True, sharex = True, figsize=(6*n, 6))
+    axes = axes.flatten()
 
-            nwp.upleft.xaxis.set_major_locator(mdates.MonthLocator())
-            nwp.upleft.xaxis.set_minor_locator(mdates.WeekdayLocator())
-            nwp.upleft.xaxis.set_major_formatter(
-                        mdates.ConciseDateFormatter(mdates.MonthLocator()))
+    for i in range(n):
+
+        ax = axes[i]
+        ax.plot(l, z, ls='-', color='k')
+
+        zone = zones[i]
+
+        ax.scatter(obsall.query(f"zone=='{zone}'").loc[:, 'Observed'],
+                   obsall.query(f"zone=='{zone}'").loc[:, 'Simulated'],
+                   marker='o', alpha=.5)
+
+        ax.set_title(zone)
+        ax.set_xlabel('Observed (ft)')
+        ax.set_ylabel('Simulated (ft')
+        ax.grid(True)
 
 
-        plt.savefig(filename,dpi = 250, bbox_inches ='tight')
+    plt.savefig(os.path.join(out_folder, '1to1.png'), dpi=250, bbox_inches='tight')
 
-        plt.close()
-        plt.close(plt.gcf())
-        plt.close('all')
-        plt.clf()
 
-        del nwp
-
-    plot_one_to_one(obsall, out_folder)
-
-def plot_one_to_one(obsall, out_folder):
-    fig = plt.figure(figsize = (6,6))
-    ax = plt.subplot()
-    l = [obsall.loc[:,['Simulated','Observed']].describe().loc['min'].min(),
-         obsall.loc[:,['Simulated','Observed']].describe().loc['max'].max()]
-    z = [obsall.loc[:,['Simulated','Observed']].describe().loc['min'].min(),
-         obsall.loc[:,['Simulated','Observed']].describe().loc['max'].max()]
-    ax.plot(l, z, ls='-', color='k')
-
-    ax.scatter(obsall.loc[:,'Observed'], obsall.loc[:,'Simulated'], marker = 'o', alpha =.5)
-
-    ax.set_xlabel('Observed (ft)')
-    ax.set_ylabel('Simulated (ft')
-    ax.grid(True)
-    ax.axis('equal')
-
-    plt.savefig(os.path.join(out_folder, '1to1.png'), dpi = 250, bbox_inches= 'tight')
-
-def get_ts(idx,hdsobj, datestart, ):
+def get_ts(idx, hdsobj, datestart, ):
     ts = hdsobj.get_ts(idx)
 
     df = pd.DataFrame(ts[:, 1], columns=['Simulated'])
@@ -195,8 +246,15 @@ def get_ts(idx,hdsobj, datestart, ):
 
     return df
 
-def load_obs(name, datestart=None, numdays=109):
 
+def load_obs(name, datestart=None, numdays=109):
+    '''
+
+    :param name:
+    :param datestart:
+    :param numdays:
+    :return:
+    '''
     fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
 
     if isinstance(name, str):
@@ -215,6 +273,7 @@ def load_obs(name, datestart=None, numdays=109):
         stg = pd.read_csv(path, parse_dates=[0])
         stg = stg.set_index(stg.columns[0])
         stg = stg.resample('1D').mean()
+        stg = stg.loc[(stg.loc[:,'Value'] > -50) & (stg.loc[:,'Value']< 100)]
 
         if datestart is not None:
             stg = stg.loc[datestart:end_time, :]
@@ -226,6 +285,77 @@ def load_obs(name, datestart=None, numdays=109):
 
     return stg
 
+def plot_model_wells(wells_mod, out_folder):
+    ibound = gpd.read_file("GIS/iboundlay1.shp")
+    ibound = ibound.query("ibound_1==1")
+
+    swr = gpd.read_file("GIS/SWR_Reaches.shp")
+
+    sfr = gpd.read_file('SFR_files/only_sfr_cells.shp')
+    wells_mod.to_html(os.path.join(out_folder, 'observation_wells.html'))
+    m = wells_mod.filter(regex='geom|station|Name|WISKI|Name|depth|Hydrograph').explore(marker_kwds={'radius': 5, 'color': 'red'},
+                                                                    popup = 'Hydrograph',
+                                                                     name='Monitoring Wells')
+
+    ibound.explore(m=m, style_kwds={'weight': 1, 'fill': False}, name='Model Boundary')
+    swr.explore(m=m, style_kwds={'weight': 3, 'fill': True, 'color': 'yellow'}, name="SWR Cells")
+    sfr.explore(m=m, style_kwds={'weight': 3, 'fill': True, 'color': 'grey'}, name='SFR Cells')
+
+    # wiski_meta.explore( marker_kwds = {'radius':5, 'color':'cyan'}, m = m, name = 'Wiski Wells')
+    utils.folium_maps.add_layers(m)
+    m.save(os.path.join(out_folder, 'wells.html'))
+
+
+def load_wells_mod(ml):
+    '''
+    load modeled wells as gdf
+    :param ml:
+    :return:
+    '''
+
+    wiski_meta = get_wiski()
+    wells = get_well_locations()
+
+    wells_mod = pd.merge(wiski_meta, wells.loc[:, ['Well Name', 'Filename',
+                                                   'WISKI', 'Notes_SX', 'Notes_SRM', 'ymin','ymax',
+                                                   'USGS Map ID (https://pubs.usgs.gov/ds/610/pdf/ds610.pdf)',
+                                                   'USGS NWIS ID',
+                                                   'WCR (Y/N)', 'Total completed depth (ft bgs)',
+                                                   'Total depth (ft bgs)',
+                                                   'Screened interval (ft bgs)', 'casing diameter (inches)', ]],
+                         left_on='station_name', right_on='WISKI', how='inner')
+
+    # add column with link to open hydrograph
+    def ref(x):
+        v = f"""
+            <p>Hydrograph  <a target="_blank" href="hydrographs/{x}.png">link</a></p>
+            """
+
+        return v
+
+    wells_mod.insert(2, 'Hydrograph', wells_mod.loc[:,'station_no'].apply(ref))
+
+    wells_mod = gpd.GeoDataFrame(wells_mod,
+                                 geometry=gpd.points_from_xy(wells_mod.station_longitude, wells_mod.station_latitude),
+                                 crs=4326).to_crs(2226)
+
+    grid = flopy.utils.gridintersect.GridIntersect(ml.modelgrid)
+
+    inx = [grid.intersect(x, shapetype='point').cellids for x in wells_mod.geometry.tolist()]
+    r = [x[0][0] if len(x) > 0 else np.nan for x in inx]
+    c = [x[0][1] if len(x) > 0 else np.nan for x in inx]
+    inside = [True if len(x) > 0 else False for x in inx]
+
+    wells_mod.loc[:, 'i_r'] = r
+    wells_mod.loc[:, 'j_c'] = c
+    wells_mod.loc[:, 'inmodearea'] = inside
+
+    zones = ZoneBudget.read_zone_file(os.path.join(ml.model_ws, 'zonebud', 'zonedbud.zbarr'))
+    wells_mod.loc[:, 'zone'] = zones[0, r, c]
+    aliases = {1: 'Mirabel', 2: 'Wohler', 3: 'Upstream'}
+    wells_mod.loc[:, 'zone'] = wells_mod.loc[:, 'zone'].replace(aliases)
+
+    return wells_mod
 
 def get_well_locations():
     p = r"T:\smaples\USGS-LBNL_WQ\Wohler_MW_inventory\Monitoring Wells Site Visit Notes - Wohler+Mirabel_car.xlsx"
@@ -237,6 +367,7 @@ def get_well_locations():
     df = df.to_crs(2226)
 
     return df
+
 
 def get_wiski():
     # gw = wiski.wiski.get_gw_stations_in_basin(basins= ['LRR*'], final_only = False)
