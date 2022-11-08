@@ -203,6 +203,28 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
 
     return obsall
 
+def scatter(obs2plot, ax):
+    import matplotlib.colors as colors
+    import matplotlib.cm as cmx
+    # Get unique names of species
+    uniq = list(set(obs2plot['well']))
+
+    # Set the color map to match the number of species
+    z = range(1, len(uniq))
+    hot = plt.get_cmap('hot')
+    cNorm = colors.Normalize(vmin=0, vmax=len(uniq))
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=hot)
+
+    x = obs2plot.loc[:, 'Observed']
+    y = obs2plot.loc[:, 'Simulated']
+
+    # Plot each species
+    for i in range(len(uniq)):
+        indx = obs2plot['well'] == uniq[i]
+        ax.scatter(x[indx], y[indx], s=15, color=scalarMap.to_rgba(i), label=uniq[i], marker='o', alpha=.5)
+
+    ax.legend(loc = 'upper left', bbox_to_anchor = (0, -.1))
+
 def plot_one_to_one(obsall, out_folder, byzone=True):
 
 
@@ -224,13 +246,14 @@ def plot_one_to_one(obsall, out_folder, byzone=True):
 
         zone = zones[i]
 
-        ax.scatter(obsall.query(f"zone=='{zone}'").loc[:, 'Observed'],
-                   obsall.query(f"zone=='{zone}'").loc[:, 'Simulated'],
-                   marker='o', alpha=.5)
+        scatter(obsall.query(f"zone=='{zone}'"), ax)
+        # ax.scatter(obsall.query(f"zone=='{zone}'").loc[:, 'Observed'],
+        #            obsall.query(f"zone=='{zone}'").loc[:, 'Simulated'],
+        #            marker='o', alpha=.5)
 
         ax.set_title(zone)
         ax.set_xlabel('Observed (ft)')
-        ax.set_ylabel('Simulated (ft')
+        ax.set_ylabel('Simulated (ft)')
         ax.grid(True)
 
 

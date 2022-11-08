@@ -1,13 +1,14 @@
 import write_inflows
-import calendar
+import calendar, os
 import basic
 import pandas as pd
 import matplotlib.pyplot as plt
 import make_wells
-
+import conda_scripts.arich_functions as af
+import matplotlib.dates as mdates
 
 def run_long_context():
-    rr, dry, mw, total = get_data('June2015')
+    rr, dry, mw, total = get_data()
     plot(rr, dry, mw, total)
 
     make_mean_q(total)
@@ -18,8 +19,96 @@ def run_long_context():
     plot_total_by_season_ts(wells_df)
 
 
+def run_current_context(run):
+    '''
+    do plot of current year with flows overlain on eachother
+    :param run:
+    :return:
+    '''
+    rr, dry, mw, total = get_data()
+    # plot the curretn year
+    info, swr_info, sfr_info, riv_keys_info = basic.load_params(run)
+    year = pd.to_datetime(info['start_date']).year
+    outfolder = basic.out_folder(run)
+    plot_by_wy(rr, dry, mw, total, outfolder=outfolder, year = year)
 
-def get_data( reload = False):
+
+def plot(rr, dry, mw, total):
+    fig, ax = plt.subplots(4, 1, sharex=True, figsize=(10, 6), )
+    plt.yscale("log")
+
+    rr.plot(ax=ax[0])
+    dry.plot(ax=ax[1])
+    mw.plot(ax=ax[2])
+    total.plot(ax=ax[3])
+    [(axi.grid(True), axi.set_yscale("log")) for axi in ax]
+    [axi.set_ylabel('cfs') for axi in ax]
+
+    plt.savefig('versions/website_info//allflows.png', dpi=300, bbox_inches='tight')
+
+    fig, ax = plt.subplots(4, 1, sharex=True, figsize=(10, 6))
+    plt.yscale("log")
+
+    mark = 's'
+    rr.resample('1Q').sum().plot(ax=ax[0], marker=mark)
+    dry.resample('1Q').sum().plot(ax=ax[1], marker=mark)
+    mw.resample('1Q').sum().plot(ax=ax[2], marker=mark)
+    total.resample('1Q').sum().plot(ax=ax[3], marker=mark)
+
+    [(axi.grid(True), axi.set_yscale("log")) for axi in ax]
+    [axi.set_ylabel('cfs') for axi in ax]
+    plt.savefig('versions/website_info//quarterly_flows_ts.png', dpi=300, bbox_inches='tight')
+
+    fig, ax = plt.subplots(4, 1, sharex=True, figsize=(10, 6))
+    plt.yscale("log")
+
+    mark = 's'
+    make_quarterly(rr).plot(ax=ax[0], marker=mark, legend=True, title='Russian River')
+    make_quarterly(dry).plot(ax=ax[1], marker=mark, legend=False, title='Dry Creek')
+    make_quarterly(mw).plot(ax=ax[2], marker=mark, legend=False, title='Mark West Creek')
+    make_quarterly(total).plot(ax=ax[3], marker=mark, legend=False, title='RR + Dry Creek Creek')
+
+    ax[0].legend(bbox_to_anchor=(1, 0), loc='lower left')
+    [(axi.grid(True), axi.set_yscale("log")) for axi in ax]
+    [axi.set_ylabel('cfs') for axi in ax]
+    plt.savefig('versions/website_info//quarterly_flows_ts_set.png', dpi=300, bbox_inches='tight')
+
+
+def plot_by_wy(df1, df2, df3, df4, outfolder, year=None, ):
+    fig, ax = plt.subplots(4, 1, sharex=True, figsize=(10, 6), )
+
+    for cnt, df in enumerate([df1, df2, df3, df4]):
+        for group, df in get_wy(df).groupby('Water Year'):
+            df = df.sort_index()
+            if group == year:
+                c = 'k'
+                lw = 3
+            else:
+                c = None
+                lw = 1
+            ax[cnt].plot(df.loc[:, 'Date'], df.iloc[:, 0], label=f"WY {group}", c=c, lw=lw)
+
+        ax[cnt].set_yscale("log")
+        ax[cnt].set_title(df.columns[0])
+        ax[cnt].set_ylabel('cfs')
+        ax[cnt].grid(True)
+    ax[0].legend(loc='upper left', bbox_to_anchor=(1, 1))
+
+    ax[0].xaxis.set_minor_locator(mdates.MonthLocator(range(1, 13)))
+    ax[0].xaxis.set_major_locator(mdates.MonthLocator(range(1, 13)))
+    ax[0].xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+
+    plt.savefig(os.path.join(outfolder, 'hydro_yearly_oneplot.png'), bbox_inches = 'tight')
+
+
+def get_wy(ser):
+    ser.loc[:, 'Water Year'] = af.water_year(ser.index)
+    ser.loc[:, 'Date'] = af.julian_water_year(ser.index.to_series())
+
+    return ser
+
+
+def get_data():
     '''
 
     :param run_name: to load from run_names.txt
@@ -37,8 +126,8 @@ def get_data( reload = False):
 
     out_folder = basic.out_folder(run_name)
 
-    print(datestart)
-    print(out_folder)
+    # print(datestart)
+    # print(out_folder)
 
     m = basic.load_model()
     flow_dict = write_inflows.flo_dict()
@@ -78,46 +167,7 @@ def make_quarterly(df):
     return t
 
 
-def plot(rr, dry, mw, total):
-    fig, ax = plt.subplots(4,1, sharex = True, figsize = (10,6), )
-    plt.yscale("log")
-    
-    rr.plot(ax =ax[0])
-    dry.plot(ax =ax[1])
-    mw.plot(ax =ax[2])
-    total.plot(ax =ax[3])
-    [(axi.grid(True), axi.set_yscale("log")) for axi in ax]
-    [ axi.set_ylabel('cfs') for axi in ax]
-    
-    plt.savefig('versions/website_info//allflows.png',dpi = 300, bbox_inches = 'tight')
-    
-    fig, ax = plt.subplots(4,1, sharex = True, figsize = (10,6))
-    plt.yscale("log") 
-    
-    mark = 's'
-    rr.resample('1Q').sum().plot(ax =ax[0], marker = mark)
-    dry.resample('1Q').sum().plot(ax =ax[1], marker = mark)
-    mw.resample('1Q').sum().plot(ax =ax[2], marker = mark)
-    total.resample('1Q').sum().plot(ax =ax[3], marker = mark)
-    
-    [(axi.grid(True), axi.set_yscale("log")) for axi in ax]
-    [ axi.set_ylabel('cfs') for axi in ax]
-    plt.savefig('versions/website_info//quarterly_flows_ts.png',dpi = 300, bbox_inches = 'tight')
-    
-    
-    fig, ax = plt.subplots(4,1, sharex = True, figsize = (10,6))
-    plt.yscale("log") 
-    
-    mark = 's'
-    make_quarterly(rr).plot(ax =ax[0], marker = mark, legend = True, title = 'Russian River')
-    make_quarterly(dry).plot(ax =ax[1], marker = mark, legend = False, title = 'Dry Creek')
-    make_quarterly(mw).plot(ax =ax[2], marker = mark, legend = False, title = 'Mark West Creek')
-    make_quarterly(total).plot(ax =ax[3], marker = mark, legend = False, title = 'RR + Dry Creek Creek')
-    
-    ax[0].legend(bbox_to_anchor = (1,0), loc = 'lower left')
-    [(axi.grid(True), axi.set_yscale("log")) for axi in ax]
-    [axi.set_ylabel('cfs') for axi in ax]
-    plt.savefig('versions/website_info//quarterly_flows_ts_set.png',dpi = 300, bbox_inches = 'tight')
+
     
 def make_mean_q(total):
     t = make_quarterly(total)

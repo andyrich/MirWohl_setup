@@ -138,7 +138,28 @@ def set_starting_heads(m, kper = None, plot = False, alt_outpath = None):
 
     return fig
 
+def set_start_from_path(path, outpath = None, m = None):
+    '''
+    use this to set starting heads from previous year. ie for 2015 model run set ending 2014 heads as initial conditions
+    :param path:
+    :param m: model
+    :return: None
+    '''
 
+    for i in range(1,4):
+        file = f"start_head_lay{i}.txt"
+        filename = os.path.join(path, 'inputs', file)
+
+        if outpath is None and m is None:
+            raise AssertionError('one of outpath or m needs to be defined')
+
+        if outpath is not None:
+            outfile = os.path.join(outpath, 'inputs', file)
+        else:
+            outfile = os.path.join(m.model_ws, 'inputs', file)
+
+        print(f"copying {filename} to {outfile}")
+        shutil.copyfile(filename, outfile)
 
 def set_start_with_burn(m):
 

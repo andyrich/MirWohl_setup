@@ -62,7 +62,6 @@ def load_wells():
     smf = wells.groupby('wellname').sum().loc[:,'flux'].rename('sumflux')
     wells = pd.merge(wells, smf, on = 'wellname')
 
-
     wells.loc[:,'frac'] = wells.loc[:,'flux']/wells.loc[:,'sumflux']
     
     return wells
@@ -101,15 +100,15 @@ def load_caissons():
     c2 = loadcaisson(path, caisson = 'Caisson2Flow.csv', name = "well2")
     c6 = loadcaisson(path, caisson = 'Caisson6Flow.csv', name = "well6")
 
-    c3 = load_pumps(path, 'well3', [5,6])
-    c4 = load_pumps(path, 'well4', [7,8])
-    c5 = load_pumps(path, 'well5', [9,10])
+    c3 = load_pumps(path, 'well3', [5, 6])
+    c4 = load_pumps(path, 'well4', [7, 8])
+    c5 = load_pumps(path, 'well5', [9, 10])
     
     df = pd.concat([c1, c2, c3, c4, c5, c6], axis = 1).fillna(0.)
     
-    df = df.astype({ic:np.float32 for ic in df.columns})
+    df = df.astype({ic: np.float32 for ic in df.columns})
     
-    df[df.abs().values>1e10] = 0
+    df[df.abs().values> 1e10] = 0
     
     df = df*1e6 / 7.480543 #from MGD to feet^3/day
     
@@ -125,10 +124,6 @@ def get_period(df, start_date, numdays, assign_per = True):
     c = df.sum(axis=1) == 0
 
     df.loc[c,:] = df.mean().mean()
-    # df = df.loc[start_date:end_days, :]
-    # df = df.resample("1D").mean()
-
-    # df.loc[:, 'Value'] = df.loc[:, 'Value'].interpolate()
 
     assert (df.sum(axis=1) == 0).sum() == 0, f"there are {(df.sum(axis=1) == 0).sum()} days with zero Q values\n" \
                                            f"the df looks like:\n{df.head()}\n{df.tail()}\n"
@@ -165,7 +160,7 @@ def plot_pumping(df, out_folder):
     ax = df.droplevel(1,0).rename(lambda x: pd.to_datetime(x).strftime("%b\n%d\n%Y")).mul(1/43560).plot.bar(
         stacked = True, figsize = (9,6), ylabel = 'acre-feet', grid = True, title = "Total Caisson Pumping, per Well")
 
-    ax.set_xticks(ax.get_xticks()[::15])
+    ax.set_xticks(ax.get_xticks()[::30])
     ax.tick_params(axis="x", rotation=0)
     
     plt.savefig(os.path.join(out_folder, 'pumping.png'), dpi=250, bbox_inches = 'tight')

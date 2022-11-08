@@ -176,6 +176,7 @@ def map_river(m = None, add_basemap = False, fig = None, ax = None, maptype = 'c
     routing = gpd.read_file('GIS/nhd_hr_demo_sfr_routing.shp')
     cells = gpd.read_file('GIS/nhd_hr_demo_sfr_cells.shp')
     outlets = gpd.read_file('GIS/nhd_hr_demo_sfr_outlets.shp')
+    swr = gpd.read_file("GIS/SWR_Reaches.shp")
     model_boundary_5070 = mod.to_crs(epsg=2226)
     # print('creating axes')
     if fig is None and ax is None:
@@ -188,12 +189,11 @@ def map_river(m = None, add_basemap = False, fig = None, ax = None, maptype = 'c
     
     cells.plot('name',ax = ax, zorder = 2, facecolor = 'None')
     routing.plot(ax=ax, zorder=3)
-    outlets.plot(ax=ax, c='red', zorder=4, label='outlets')
+    # outlets.plot(ax=ax, c='red', zorder=4, label='outlets')
     model_boundary_5070.plot(ax=ax, facecolor='None', 
                              edgecolor='gray',
-                             zorder=1
-                            )
-
+                             zorder=1)
+    swr.plot(ax = ax, zorder = 10, facecolor = 'yellow', edgecolor = 'grey')
 
     LegendElement = [
         mpatches.mlines.Line2D([], [], color='red', linewidth=0., marker='o', label='sfr outlet'),

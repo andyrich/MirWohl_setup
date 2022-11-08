@@ -10,7 +10,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -45,7 +45,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -82,7 +82,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -117,7 +117,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -154,7 +154,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -189,7 +189,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -223,7 +223,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -258,7 +258,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -285,7 +285,7 @@
         
         "June2012":{
                     "name":"June2012",
-                    "start_date":"6/15/2012",
+                    "start_date":"1/1/2012",
                     "numdays":365,
                     "description":"write-math",
                     "notes":"",
@@ -294,7 +294,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
