@@ -80,6 +80,9 @@ def setup_folder(run_name):
     replace(src = 'versions/website_info//lay 1 top.png',
             dst = os.path.join('versions', run_name, 'lay 1 top.png'))
 
+    replace(src = 'versions/website_info/waterlevel_trends.html',
+            dst = os.path.join('versions', run_name, 'waterlevel_trends.html'))
+
 def reset_model_files(path, ndays = 365):
     '''
     reset model files. because some model runs fail, need to replace files that have wrong number of stress periods.

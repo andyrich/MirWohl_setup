@@ -157,14 +157,29 @@ def get_well_info(wells, timeseries):
     return wells_info
     
 def plot_pumping(df, out_folder):
-    ax = df.droplevel(1,0).rename(lambda x: pd.to_datetime(x).strftime("%b\n%d\n%Y")).mul(1/43560).plot.bar(
-        stacked = True, figsize = (9,6), ylabel = 'acre-feet', grid = True, title = "Total Caisson Pumping, per Well")
+    ax = df.droplevel(1, 0).rename(
+        lambda x: pd.to_datetime(x).strftime("%b\n%d\n%Y") if pd.to_datetime(x).day == 1 else '').mul(
+        1 / 43560).plot.bar(
+        stacked=True, figsize=(9, 6), ylabel='acre-feet', grid=True, title="Total Caisson Pumping, per Well")
 
-    ax.set_xticks(ax.get_xticks()[::30])
+    ticks = [n for n, lab in enumerate(ax.get_xticklabels()) if len(lab.get_text()) > 0]
+    ax.set_xticks(ticks)
     ax.tick_params(axis="x", rotation=0)
     
     plt.savefig(os.path.join(out_folder, 'pumping.png'), dpi=250, bbox_inches = 'tight')
-    
+
+    #cumulative pumping
+    ax = df.droplevel(1, 0).rename(
+        lambda x: pd.to_datetime(x).strftime("%b\n%d\n%Y") if pd.to_datetime(x).day == 1 else '').mul(
+        1 / 43560).cumsum().plot.bar(
+        stacked=True, figsize=(9, 6), ylabel='acre-feet', grid=True, title="Total Cumulative Caisson Pumping, per Well")
+
+    ticks = [n for n, lab in enumerate(ax.get_xticklabels()) if len(lab.get_text()) > 0]
+    ax.set_xticks(ticks)
+    ax.tick_params(axis="x", rotation=0)
+
+    plt.savefig(os.path.join(out_folder, 'pumping_cum.png'), dpi=250, bbox_inches='tight')
+
 def mf_wel(m, ts_data):
     
     stress_period_data = {}

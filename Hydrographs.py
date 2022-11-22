@@ -55,7 +55,6 @@ def run(run_name, reload=False, ml=None, plot_well_locs = True, plot_hydros = Tr
     if plot_hydros:
         obsall = do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = skip_fancy)
         plot_one_to_one(obsall, out_folder)
-
         plot_residual(obsall, out_folder=out_folder, ml = ml)
 
 
@@ -112,7 +111,9 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
 
     obsall = pd.DataFrame()
 
-    for _, wel in wells_mod.iterrows():
+    nwells = 0
+
+    for _, wel in wells_mod.sort_values('station_no').iterrows():
         station_name = wel['station_name']
         print(f"plotting {station_name}")
         idx = (0, wel.loc['i_r'], wel.loc['j_c'])
@@ -145,6 +146,8 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
                               f"index of predvobs\n{predvobs.index}\n")
 
             obsall = obsall.append(predvobs)
+
+            nwells = nwells + 1
 
         if skip_plotting:
             print('not plotting hydrographs')
@@ -200,6 +203,8 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
             del nwp
 
     obsall.to_csv(os.path.join(partics, 'all_meas.csv'))
+
+    print(f"\n\nNumber of wells plotted:\n{nwells}\n\n")
 
     return obsall
 
@@ -278,10 +283,17 @@ def load_obs(name, datestart=None, numdays=109):
     :param numdays:
     :return:
     '''
+
     fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
 
+    # need to check if it's a caisson record. if it is, it needs to be loaded differently
     if isinstance(name, str):
-        pass
+        if 'caisson' in name.lower():
+            fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
+            caisson = True
+        else:
+            caisson = False
+
     else:
         name = 'no filename given'
 
@@ -292,11 +304,7 @@ def load_obs(name, datestart=None, numdays=109):
     end_time = pd.to_datetime(datestart) + pd.to_timedelta(numdays, unit='D')
 
     if path.exists():
-        print(f"----------\npath does exist:\n{path.name}\n")
-        stg = pd.read_csv(path, parse_dates=[0])
-        stg = stg.set_index(stg.columns[0])
-        stg = stg.resample('1D').mean()
-        stg = stg.loc[(stg.loc[:,'Value'] > -50) & (stg.loc[:,'Value']< 100)]
+        stg = read_stg(path, caisson = caisson)
 
         if datestart is not None:
             stg = stg.loc[datestart:end_time, :]
@@ -304,25 +312,67 @@ def load_obs(name, datestart=None, numdays=109):
 
     else:
         print(f"path does not exist:\n\n{path}\n")
+
         stg = pd.DataFrame()
 
     return stg
 
+def read_stg(path, caisson = False):
+    '''
+    load the wl record.
+    :param path:
+    :param caisson: if it's a caisson or not. these records are formatted differently.
+    :return: df with daily values of 'Value'
+    '''
+
+
+    print(f"----------\npath does exist:\n{path.name}\n")
+    if caisson:
+        stg = pd.read_csv(path)
+        stg = stg.rename(columns={'DateTime': 'Datetime'})
+        stg.loc[:, 'Datetime'] = pd.to_datetime(stg.loc[:, 'Datetime'])
+        stg = stg.set_index('Datetime')
+        stg = stg.loc[:, ['Value']]
+        stg.loc[:, 'Value'] = stg.loc[:, 'Value'].apply(basic.isnumber)
+        stg = stg.resample('1D').mean()
+        stg = stg.loc[(stg.loc[:, 'Value'] > -50) & (stg.loc[:, 'Value'] < 100)]
+
+    else:
+        stg = pd.read_csv(path, parse_dates=[0])
+        stg = stg.set_index(stg.columns[0])
+        stg = stg.resample('1D').mean()
+        stg = stg.loc[(stg.loc[:, 'Value'] > -50) & (stg.loc[:, 'Value'] < 100)]
+
+    return stg
+
 def plot_model_wells(wells_mod, out_folder):
+    '''
+    plot folium map of wells
+
+    :param wells_mod:
+    :param out_folder:
+    :return:
+    '''
     ibound = gpd.read_file("GIS/iboundlay1.shp")
     ibound = ibound.query("ibound_1==1")
 
     swr = gpd.read_file("GIS/SWR_Reaches.shp")
 
+    caissons = gpd.read_file('GIS/wells.shp')
+
     sfr = gpd.read_file('SFR_files/only_sfr_cells.shp')
     wells_mod.to_html(os.path.join(out_folder, 'observation_wells.html'))
-    m = wells_mod.filter(regex='geom|station|Name|WISKI|Name|depth|Hydrograph').explore(marker_kwds={'radius': 5, 'color': 'red'},
-                                                                    popup = 'Hydrograph',
-                                                                     name='Monitoring Wells')
 
-    ibound.explore(m=m, style_kwds={'weight': 1, 'fill': False}, name='Model Boundary')
+
+    m = ibound.explore(style_kwds={'weight': .5, 'fill': False}, name='Model Boundary')
     swr.explore(m=m, style_kwds={'weight': 3, 'fill': True, 'color': 'yellow'}, name="SWR Cells")
     sfr.explore(m=m, style_kwds={'weight': 3, 'fill': True, 'color': 'grey'}, name='SFR Cells')
+    caissons.explore(m=m, style_kwds={'weight': 3, 'fill': False, 'color': 'cyan'}, name='Caisson Cells')
+
+    wells_mod.filter(regex='geom|station|Name|WISKI|Name|depth|Hydrograph').explore(m=m,
+                                                marker_kwds={'radius': 5, 'color': 'red'},
+                                                popup = 'Hydrograph',
+                                                name='Monitoring Wells')
 
     # wiski_meta.explore( marker_kwds = {'radius':5, 'color':'cyan'}, m = m, name = 'Wiski Wells')
     utils.folium_maps.add_layers(m)
