@@ -19,6 +19,7 @@ import conda_scripts.gwplot_fancy as gwp
 import warnings
 from flopy.utils import ZoneBudget
 import conda_scripts.plot_help as ph
+import re
 
 def run(run_name, reload=False, ml=None, plot_well_locs = True, plot_hydros = True, skip_fancy = False ):
     '''
@@ -106,17 +107,17 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
     :return: obsall (predicted versus observed)
     '''
     hds, hdsobj = basic.get_heads(ml)
-
     partics = os.path.join(out_folder, 'hydrographs')
-
     obsall = pd.DataFrame()
 
     nwells = 0
+    passed_wells = []
+    plotted_wells = []
 
     for _, wel in wells_mod.sort_values('station_no').iterrows():
         station_name = wel['station_name']
         print(f"plotting {station_name}")
-        idx = (0, wel.loc['i_r'], wel.loc['j_c'])
+        idx = (wel.loc['Model Layer'] - 1, wel.loc['i_r'], wel.loc['j_c'])
         head = get_ts(idx, hdsobj, datestart)
         obs = load_obs(wel.loc['Filename'], datestart, numdays=numdays)
 
@@ -134,6 +135,8 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
             predvobs.loc[:, 'zone'] = wel['zone']
             predvobs.loc[:, 'geometry'] = wel['geometry']
             predvobs.loc[:, 'well'] = station_name
+            predvobs.loc[:,'station_no'] = wel['station_no']
+            predvobs.loc[:,'label'] = f"{wel['station_no']}, {wel['station_name']}"
 
             if predvobs.shape[0] == obs.shape[0]:
                 warnings.warn(f"shapes not matching in setup for 1 to 1 in Hydrographs. missing values are" \
@@ -147,12 +150,12 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
 
             obsall = obsall.append(predvobs)
 
-            nwells = nwells + 1
 
         if skip_plotting:
             print('not plotting hydrographs')
         else:
             f = wel['station_no']
+            stno = wel['station_name']
 
             filename = os.path.join(partics, f'{f}.png')
             # if not os.path.exists(filename):
@@ -175,8 +178,9 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
 
             nwp.upleft.set_yticks(np.arange(ymin, ymax+1, 10))
             nwp.upleft.set_yticks(np.arange(ymin, ymax + 1, 2), minor=True)
-            nwp.upleft.grid(which='major', alpha=0.5)
-            nwp.upleft.grid(which='minor', alpha=0.2)
+            nwp.upleft.set_title(f"{f}, {stno}")
+            nwp.upleft.set_xlabel('')
+            nwp.ax_map.set_title('')
 
             if obs.shape[0] > 1:
                 obs.rename(columns={'Value': 'Observed'}).plot(ax=nwp.upleft)
@@ -193,6 +197,11 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
                 nwp.upleft.xaxis.set_major_formatter(
                     mdates.ConciseDateFormatter(mdates.MonthLocator()))
 
+            nwp.upleft.grid(True, which='minor', linewidth=.2, axis = 'y', c='grey')
+            nwp.upleft.grid(True, which='major', linewidth=.5, axis='y', c='black')
+            nwp.upleft.grid(False, which='major', linewidth=.5, axis='x', c='black')
+
+            # nwp.upleft.grid(True, which='major', linewidth= .5, c = 'black')
             plt.savefig(filename, dpi=250, bbox_inches='tight')
 
             plt.close()
@@ -202,9 +211,13 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
 
             del nwp
 
+            nwells = nwells + 1
+            plotted_wells.extend([station_name])
+
     obsall.to_csv(os.path.join(partics, 'all_meas.csv'))
 
-    print(f"\n\nNumber of wells plotted:\n{nwells}\n\n")
+    print(f"\n\nNumber of wells plotted:\n{nwells}\n")
+    print(f"wells plotted:\n{plotted_wells}\n\n")
 
     return obsall
 
@@ -212,25 +225,25 @@ def scatter(obs2plot, ax):
     import matplotlib.colors as colors
     import matplotlib.cm as cmx
     # Get unique names of species
-    uniq = list(set(obs2plot['well']))
+    uniq = list(set(obs2plot['label']))
 
     # Set the color map to match the number of species
     z = range(1, len(uniq))
-    hot = plt.get_cmap('hot')
+    hot = plt.get_cmap('tab20')
     cNorm = colors.Normalize(vmin=0, vmax=len(uniq))
     scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=hot)
 
     x = obs2plot.loc[:, 'Observed']
     y = obs2plot.loc[:, 'Simulated']
 
-    # Plot each species
+    # Plot each type
     for i in range(len(uniq)):
-        indx = obs2plot['well'] == uniq[i]
+        indx = obs2plot['label'] == uniq[i]
         ax.scatter(x[indx], y[indx], s=15, color=scalarMap.to_rgba(i), label=uniq[i], marker='o', alpha=.5)
 
-    ax.legend(loc = 'upper left', bbox_to_anchor = (0, -.1))
+    ax.legend(loc = 'upper left', bbox_to_anchor = (0, -.1), ncol = 2)
 
-def plot_one_to_one(obsall, out_folder, byzone=True):
+def plot_one_to_one(obsall, out_folder):
 
 
     l = [obsall.loc[:, ['Simulated', 'Observed']].describe().loc['min'].min(),
@@ -245,22 +258,14 @@ def plot_one_to_one(obsall, out_folder, byzone=True):
     axes = axes.flatten()
 
     for i in range(n):
-
         ax = axes[i]
         ax.plot(l, z, ls='-', color='k')
-
         zone = zones[i]
-
         scatter(obsall.query(f"zone=='{zone}'"), ax)
-        # ax.scatter(obsall.query(f"zone=='{zone}'").loc[:, 'Observed'],
-        #            obsall.query(f"zone=='{zone}'").loc[:, 'Simulated'],
-        #            marker='o', alpha=.5)
-
+        ax.grid(True)
         ax.set_title(zone)
         ax.set_xlabel('Observed (ft)')
         ax.set_ylabel('Simulated (ft)')
-        ax.grid(True)
-
 
     plt.savefig(os.path.join(out_folder, '1to1.png'), dpi=250, bbox_inches='tight')
 
@@ -335,6 +340,13 @@ def read_stg(path, caisson = False):
         stg = stg.loc[:, ['Value']]
         stg.loc[:, 'Value'] = stg.loc[:, 'Value'].apply(basic.isnumber)
         stg = stg.resample('1D').mean()
+
+        # get the name of the caisson in order to get the elevation offset
+        pattern = '[a-z]+'
+        repl = ''
+        caisson_name = re.sub(pattern, repl, path.name.replace('.csv', ''), flags=re.IGNORECASE)
+
+        stg = stg + caisson_offsets(caisson_name)
         stg = stg.loc[(stg.loc[:, 'Value'] > -50) & (stg.loc[:, 'Value'] < 100)]
 
     else:
@@ -344,6 +356,32 @@ def read_stg(path, caisson = False):
         stg = stg.loc[(stg.loc[:, 'Value'] > -50) & (stg.loc[:, 'Value'] < 100)]
 
     return stg
+
+def caisson_offsets(caisson):
+    '''
+    load elevation in ft ngvd29 of caisson bottoms
+    file: // / T:\tschram\Transmission_System\Infrastructure\CollectorCapacityStudy\CollectorData_2019.xlsx
+    :param caisson: int or str
+    :return: offset in feet ngvd29
+    '''
+
+
+    offsets = {'1': -19.2,
+               '2': -18.6,
+               '3': -29.55,
+               '4': -33.05,
+               '5': -17.79,
+               '6': -23.7}
+
+    if isinstance(caisson, str):
+        pass
+    else:
+        caisson = str(caisson)
+
+    offset = offsets[caisson]
+
+    return offset
+
 
 def plot_model_wells(wells_mod, out_folder):
     '''
@@ -390,6 +428,7 @@ def load_wells_mod(ml):
     wells = get_well_locations()
 
     wells_mod = pd.merge(wiski_meta, wells.loc[:, ['Well Name', 'Filename',
+                                                   'Model Layer',
                                                    'WISKI', 'Notes_SX', 'Notes_SRM', 'ymin','ymax',
                                                    'USGS Map ID (https://pubs.usgs.gov/ds/610/pdf/ds610.pdf)',
                                                    'USGS NWIS ID',

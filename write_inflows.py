@@ -24,7 +24,18 @@ def flo_dict():
     return flow
 
 def run(model_name, m = None, minvalue = 29.54,
-    max_value = 38,    numdays = None, datestart = None):
+    max_value = 38,    numdays = None, datestart = None, cleandamdata = True):
+    '''
+    run processing of river inflows, dam stage
+    :param model_name:
+    :param m:
+    :param minvalue:
+    :param max_value:
+    :param numdays:
+    :param datestart:
+    :param cleandamdata:
+    :return: rr, dry, mw, total, stg
+    '''
 
     if m is None:
         m = basic.load_model()
@@ -64,7 +75,7 @@ def run(model_name, m = None, minvalue = 29.54,
     total = dry.loc[:, 'Q'] + rr.loc[:, 'Q']
     total = total.to_frame('rrtotal')
 
-    stg = load_dam(total, datestart=datestart, minvalue=minvalue, max_value=max_value, numdays=numdays)
+    stg = load_dam(total, datestart=datestart, minvalue=minvalue, max_value=max_value, numdays=numdays, clean = cleandamdata)
 
     plot_dam(stg, minvalue=minvalue, max_value=max_value,
               out_folder = out_folder)
@@ -84,6 +95,7 @@ def run(model_name, m = None, minvalue = 29.54,
 
         cnt = cnt+1
 
+    return rr, dry, mw, total, stg
 
 
 def plot_dam(stg,minvalue, max_value,
@@ -109,7 +121,7 @@ def plot_dam(stg,minvalue, max_value,
         plt.savefig(os.path.join(out_folder, 'dam_elevation.png'), bbox_inches='tight', dpi=250)
 
 
-def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109):
+def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109, clean = True):
     p = pathlib.Path(
         r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData")
 
@@ -117,8 +129,10 @@ def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109):
 
     stg = pd.read_csv(p.joinpath(rds), parse_dates=[0]).set_index('StartDateTime')
 
-    stg.loc[stg.loc[:, 'Value'] > 50, 'Value'] = 50.
-    stg.loc[stg.loc[:, 'Value'] < 20, 'Value'] = 20.
+    if clean:
+        stg.loc[stg.loc[:, 'Value'] > 50, 'Value'] = 50.
+        stg.loc[stg.loc[:, 'Value'] < 20, 'Value'] = 20.
+
     stg.loc[:, 'Original_Value'] = stg.loc[:, 'Value'].copy()
     c = stg.loc[:, 'FillValue'].notnull()
     stg.loc[c, 'Value'] = stg.loc[c, 'FillValue']

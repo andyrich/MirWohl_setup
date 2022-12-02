@@ -97,6 +97,13 @@ def plot_rds_stage(m, datestart, out_folder, numdays = 365, ISWRPQAQ = None):
 
     stg[stg<100].plot(ax = ax, color = 'k')
 
+    # add manually observed river stage
+    year = pd.to_datetime(datestart).year
+    rds_phist = basic.load_river_report(year)
+    rds_phist = rds_phist.loc[:, 'River Diversion'].loc[:, 'River Level']
+    rds_phist = rds_phist.replace({'N/D': np.nan}).astype(float)
+    rds_phist.plot(ax = ax, c = 'g', label = 'RDS (manually observed)')
+
     plt.savefig(os.path.join(out_folder, 'rds_stage.png'), dpi=250, bbox_inches='tight')
 
 def plot_ponds(m, datestart, out_folder, numdays = 365, ISWRPQAQ = None):

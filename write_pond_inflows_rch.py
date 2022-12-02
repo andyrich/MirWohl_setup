@@ -17,7 +17,18 @@ import cartopy.crs as ccrs
 import pathlib
 
 
-def run(name, m = None, draw_maps = True):
+def run(name, m = None, draw_maps = True, add_overland = True, ovr_flux = 0.5):
+
+    '''
+    create pond recharge package
+    :param name: name of run
+    :param m: model instance
+    :param draw_maps: make the maps
+    :param add_overland: add overland flow
+    :param ovr_flux: ft/day
+    :return:
+    '''
+
     print('running pond inflows recharge package')
     if m is None:
         m = basic.load_model(name)
@@ -56,6 +67,12 @@ def run(name, m = None, draw_maps = True):
     cnt = 0
     # df_cur_roll.to_csv(f"RR_2022/pond_inflows/sum.csv")
 
+    if add_overland:
+        ovr = read_overland(m)
+        ovr.loc[:,'flow_depth'] = ovr_flux/86400
+    else:
+        ovr = pd.DataFrame()
+
     rech = {}
 
     for ind, d in df_cur_roll.iterrows():
@@ -77,7 +94,15 @@ def run(name, m = None, draw_maps = True):
             array = make_array(m, pond, col = 'flow_depth')
         else:
             array = 0.000
-        rech[cnt] = array
+
+        array_ovr = 0.00
+        if add_overland:
+            if ind in ovr.index:
+                ovr_cur = ovr.loc[ovr.index == ind,:]
+                array_ovr = make_array(m, ovr_cur, col='flow_depth')
+
+
+        rech[cnt] = array + array_ovr
 
         cnt = cnt + 1
         print(cnt, end =' ', flush = True)
@@ -90,6 +115,14 @@ def make_rch(m, rech):
     rch = flopy.modflow.ModflowRch(m, ipakcb = 1,  nrchop = 1, rech=rech)
 
     return rch
+
+
+def read_overland(m):
+    ovr = pd.read_csv('Overland_Flow/overland_flow_ts.csv', index_col=[0], parse_dates=True)
+    ovr.loc[:, ['k', 'i', 'j']] = m.dis.get_lrc(list(ovr.loc[:, 'node_grid'].values))
+
+    return ovr
+
 
 def draw_map_do(pond_grid, out_folder):
     fig, ax = basic.basic_map(maptype=None)
@@ -128,7 +161,10 @@ def make_array(m, df, col = 'flow_depth'):
 
     array = np.zeros((m.nrow, m.ncol))
 
-    array[df.loc[:,'row']-1, df.loc[:,'column']-1] = df.loc[:,col]
+    if 'row' in df.columns:
+        array[df.loc[:,'row']-1, df.loc[:,'column']-1] = df.loc[:,col]
+    else:
+        array[df.loc[:, 'i'], df.loc[:, 'j']] = df.loc[:, col]
 
     return array
 

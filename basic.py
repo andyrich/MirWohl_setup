@@ -13,7 +13,7 @@ import flopy.utils.binaryfile as bf
 import matplotlib.gridspec as gridspec
 import matplotlib as mpl
 import cartopy.crs as ccrs
-
+from io import StringIO
 import shutil
 
 def load_params(run_name = 'calibration'):
@@ -148,6 +148,22 @@ def make_model_files_html(run_name):
                 # print(outfile.write(b(v,v)))
 
 
+def load_river_report(year=2020):
+    p = pathlib.Path(r"S:\Ops\RiverReport\Production_and_Demand_Report_PHIST01.xlsm")
+
+    sheet = f"Data_{year}"
+
+    tab = pd.read_excel(p, sheet_name=sheet, header=[3, 4, 5, 6, 7, 8], skiprows=[9, 10, 11, 12], index_col=[0])
+    cc = ',Level 1,Level 2,Level 3,Level 4,Level 5,units,Label\r\n0,Day,Day,Day,Day,Day,Day,Day\r\n1,River Diversion,Midnight to Midnight,Midnight to Midnight,Pump 1,100HP,Runtime,Pump 1 Runtime\r\n2,River Diversion,Midnight to Midnight,Midnight to Midnight,Pump 2,50HP,Runtime,Pump 2 Runtime\r\n3,River Diversion,Midnight to Midnight,Midnight to Midnight,Pump 3,100HP,Runtime,Pump 3 Runtime\r\n4,River Diversion,Midnight to Midnight,Midnight to Midnight,Total,Diversion,AF,Total Diversion\r\n5,River Diversion,Avg,Avg,River,Level,Feet,River Level\r\n6,Caisson 1,Daily,Daily,Average,Depth,Feet,Depth\r\n7,Caisson 1,Daily,Daily,P1 + P2,Runtime,Hours,Runtime\r\n8,Caisson 2,Daily,Daily,Average,Depth,Feet,Depth\r\n9,Caisson 2,Daily,Daily,P3 + P4,Runtime,Hours,Runtime\r\n10,Caisson 3,Daily,Daily,Average,Depth,Feet,Depth\r\n11,Caisson 3,Daily,Daily,P5 + P6,Runtime,Hours,Runtime\r\n12,Caisson 4,Daily,Daily,Average,Depth,Feet,Depth\r\n13,Caisson 4,Daily,Daily,P7 + P8,Runtime,Hours,Runtime\r\n14,Caisson 5,Daily,Daily,Average,Depth,Feet,Depth\r\n15,Caisson 5,Daily,Daily,P9 + P10,Runtime,Hours,Runtime\r\n16,Caisson 6,Daily,Daily,Average,Depth,Feet,Depth\r\n17,Caisson 6,Daily,Daily,P11 + P12,Runtime,Hours,Runtime\r\n18,Production,Midnight to Midnight,Midnight to Midnight,Unnamed: 19_level_3,SR AQ ,MGD,SR AQ \r\n19,Production,Midnight to Midnight,Midnight to Midnight,Unnamed: 20_level_3,Cot AQ ,MGD,Cot AQ \r\n20,Production,Midnight to Midnight,Midnight to Midnight,54-in,Total,MGD,54-in Total MGD\r\n21,Production,Midnight to Midnight,Midnight to Midnight,54-in ,North,MGD,54-in  North MGD\r\n22,Production,Midnight to Midnight,Midnight to Midnight,54-in,South,MGD,54-in South MGD\r\n23,Production,Midnight to Midnight,Midnight to Midnight,Occidental,Well,MGD,Occidental Well MGD\r\n24,Production,Midnight to Midnight,Midnight to Midnight,Sebastopol,Well,MGD,Sebastopol Well MGD\r\n25,Production,Midnight to Midnight,Midnight to Midnight,Todd,Well,MGD,Todd Well MGD\r\n26,Production,Midnight to Midnight,Midnight to Midnight,Todd,Wohler,MGD,Todd Wohler MGD\r\n27,Production,Midnight to Midnight,Midnight to Midnight,Todd,Mirabel,MGD,Todd Mirabel MGD\r\n28,Production,Midnight to Midnight,Midnight to Midnight,Todd,Total,MGD,Todd Total MGD\r\n29,Storage,Midnight,Midnight,Midnight,Total,MG,Total MG\r\n30,Storage,Midnight,Midnight,Midnight,Total,% Full,Total % Full\r\n31,Demand,Demand,Demand,Daily,System,MGD,System MGD\r\n32,Demand,Demand,Demand,Avg 7-Day,System,MGD,System MGD\r\n33,Climate,Daily,Daily,Santa Rosa,Rainfall,Inches,Santa Rosa Rainfall\r\n34,Climate,Daily,Daily,Santa Rosa,Hi Temp,oF,Santa Rosa Hi Temp\r\n35,Climate,Daily,Daily,Santa Rosa,Low Temp,oF,Santa Rosa Low Temp\r\n36,Climate,Daily,Daily,Operations,Rainfall,Inches,Operations Rainfall\r\n37,Climate,Daily,Daily,Operations,Hi Temp,F,Operations Hi Temp\r\n38,Climate,Daily,Daily,Operations,Low Temp,F,Operations Low Temp\r\n39,Climate,Production,Minus,Demand,Negative is Red,MGD,Demand MGD\r\n40,Climate,Production,Minus,Comments,Unnamed: 41_level_4,text,Comments\r\n'
+
+    cind = pd.read_csv(StringIO(cc), sep=',')
+    cind = cind.drop(columns=cind.columns[0])
+
+    tab = pd.DataFrame(tab.values, index=tab.index, columns=pd.MultiIndex.from_frame(cind))
+    tab = tab.droplevel([1, 2, 3, 4, 5], 1)
+    tab = tab.applymap(isnumber)
+
+    return tab
 
 def out_folder(run_name = 'June2015'):
     info, swr, sfr, riv_keys = load_params(run_name)
