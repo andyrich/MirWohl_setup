@@ -21,7 +21,7 @@ from flopy.utils import ZoneBudget
 import conda_scripts.plot_help as ph
 import re
 
-def run(run_name, reload=False, ml=None, plot_well_locs = True, plot_hydros = True, skip_fancy = False ):
+def run(run_name, reload=False, ml=None, plot_well_locs = True, plot_hydros = True, skip_fancy = False, add_temp = True ):
     '''
 
     :param ml:
@@ -54,7 +54,7 @@ def run(run_name, reload=False, ml=None, plot_well_locs = True, plot_hydros = Tr
         plot_model_wells(wells_mod = wells_mod, out_folder = out_folder)
 
     if plot_hydros:
-        obsall = do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = skip_fancy)
+        obsall = do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = skip_fancy, add_temp = add_temp)
         plot_one_to_one(obsall, out_folder)
         plot_residual(obsall, out_folder=out_folder, ml = ml)
 
@@ -95,7 +95,7 @@ def plot_residual(allobs, out_folder, ml):
 
     return fig, ax
 
-def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = False):
+def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = False, add_temp = False):
     '''
     plot all hydrographs
     :param skip_plotting:
@@ -187,6 +187,11 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
                 # miny, maxy = obs.loc[:, 'Value'].min(), obs.loc[:, 'Value'].max()
                 # nwp.upleft.set_ylim([np.nanmin([miny, minya]) - 10, np.nanmax([maxy, maxya]) + 10])
 
+            if add_temp:
+                temp = load_temp(wel.loc['Filename'], datestart=datestart, numdays=numdays)
+                if temp.shape[0]>0:
+                    ax = plot_temp(nwp.upleft, temp)
+
             if not skip_gw_data:
                 # re-set xlimits because limits fancy plot are set to 1980
                 nwp.upleft.set_xlim(left=head.index.min() - pd.to_timedelta('1 w'),
@@ -200,6 +205,8 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
             nwp.upleft.grid(True, which='minor', linewidth=.2, axis = 'y', c='grey')
             nwp.upleft.grid(True, which='major', linewidth=.5, axis='y', c='black')
             nwp.upleft.grid(False, which='major', linewidth=.5, axis='x', c='black')
+
+
 
             # nwp.upleft.grid(True, which='major', linewidth= .5, c = 'black')
             plt.savefig(filename, dpi=250, bbox_inches='tight')
@@ -220,6 +227,27 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
     print(f"wells plotted:\n{plotted_wells}\n\n")
 
     return obsall
+
+def plot_temp(axin, temp):
+    '''
+    add temp to the hydrograph plot on new y axis
+    :param axin:
+    :param temp:
+    :return: new y axis
+    '''
+
+
+    ax = axin.twinx()
+    ax.scatter(temp.index, temp.Value, c='r', marker='.', ls='None', label='Temp')
+    ax.set_ylim([30, 75])
+    ax.legend(loc='lower right', bbox_to_anchor=(1, 1))
+    ax.tick_params(axis='y', colors='red')  # setting up X-axis tick color to red
+    ax.spines['right'].set_color('red')  # setting up Y-axis tick color to red
+
+    ax.set(xticklabels=[])  # remove the tick labels
+    ax.tick_params(bottom=False)  # remove the ticks
+
+    return ax
 
 def scatter(obs2plot, ax):
     import matplotlib.colors as colors
@@ -318,6 +346,52 @@ def load_obs(name, datestart=None, numdays=109):
     else:
         print(f"path does not exist:\n\n{path}\n")
 
+        stg = pd.DataFrame()
+
+    return stg
+
+
+def load_temp(name, datestart=None, numdays=365):
+    '''
+    load the temp a named well. only works for observation wells
+    :param name:
+    :param datestart:
+    :param numdays:
+    :return:
+    '''
+
+    fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
+
+    # need to check if it's a caisson record. if it is, it needs to be loaded differently
+    if isinstance(name, str):
+        if 'caisson' in name.lower():
+            fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
+            caisson = True
+        else:
+            caisson = False
+    else:
+        caisson = False
+        name = 'no filename given'
+
+    if caisson:
+        # path = pathlib.Path(fold).joinpath(name)
+        path = pathlib.Path(fold).joinpath(name)
+    else:
+        path = pathlib.Path(fold).joinpath(name.replace('.csv', 'temp.csv'))
+
+    # if end_time is None:
+    end_time = pd.to_datetime(datestart) + pd.to_timedelta(numdays, unit='D')
+
+    if path.exists() and (not caisson):
+        stg = pd.read_csv(path, parse_dates=[0])
+        stg = stg.set_index(stg.columns[0])
+        stg = stg.resample('1D').mean()
+        stg = stg.loc[(stg.loc[:, 'Value'] > 50) & (stg.loc[:, 'Value'] < 120)]
+
+        if datestart is not None:
+            stg = stg.loc[datestart:end_time, :]
+    else:
+        print(f"path does not exist:\n\n{path}\n")
         stg = pd.DataFrame()
 
     return stg

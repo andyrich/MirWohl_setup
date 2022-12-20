@@ -4,6 +4,7 @@ import basic
 import pandas as pd
 import matplotlib.pyplot as plt
 import make_wells
+import numpy as np
 import conda_scripts.arich_functions as af
 import matplotlib.dates as mdates
 
@@ -13,7 +14,7 @@ def run_long_context():
 
     make_mean_q(total)
 
-    wells_df = wells('June2012')
+    wells_df = wells()
     quarterly_plot(wells_df)
     plot_total_by_season(wells_df)
     plot_total_by_season_ts(wells_df)
@@ -191,33 +192,18 @@ def make_mean_q(total):
     plt.savefig('versions/website_info//quarterly_flows.png',dpi = 300, bbox_inches = 'tight')
     
 
-def wells(name):
+def wells():
     print('running wel creation package')
-    # m = basic.load_model(name)
+    datestart = '6/19/2012'
 
-    info, swr_info, sfr_info, riv_keys_info = basic.load_params(name)
+    numdays = (pd.to_datetime('10/1/2022') - pd.to_datetime(datestart)).days
 
-    # datestart = info['start_date']
-    datestart = '1/1/2012'
-    # numdays = info['numdays']
-    numdays = (pd.to_datetime('10/1/2022')-pd.to_datetime(datestart)).days
-    name = info['name']
-
-    # out_folder = basic.out_folder(run_name)
-
-    print(datestart)
-    # print(out_folder)
-
-    # out_folder = basic.out_folder(name)
     df = make_wells.load_caissons()
-
-    df = make_wells.get_period(df, datestart,numdays, False)
-    
+    df = make_wells.get_period(df, datestart, numdays, False)
     df = df.droplevel(1,0)
-    
     df = df/43560.
-    
-    return  df
+
+    return df
 
 
 def quarterly_plot(wells_df):    
@@ -245,18 +231,26 @@ def quarterly_plot(wells_df):
     ax.xaxis.set_major_formatter(formatter)
     ax.xaxis.set_minor_locator(MonthLocator([3,6,9],1,4))
 
-    texts = [ax.text(df.index[-1]+pd.to_timedelta(75, unit = 'D'),
-                     (df.tail(1).loc[:,df.columns[col-1]].values+df.tail(1).loc[:,df.columns[col]].values)/2,
-                      df.columns[col])  for col in range(1,7)]
+    xxx = [[df.index[-1] + pd.to_timedelta(75, unit='D'),
+            (df.tail(1).loc[:, df.columns[col - 1]].values + df.tail(1).loc[:, df.columns[col]].values) / 2,
+            df.columns[col]] for col in range(1, 7)]
+    xxx = np.array(xxx)
+    texts = [ax.text(ti, xi, yi, ha='left') for ti, xi, yi in xxx]
+
+    # texts = [ax.text(df.index[-1]+pd.to_timedelta(75, unit = 'D'),
+    #                  (df.tail(1).loc[:,df.columns[col-1]].values+df.tail(1).loc[:,df.columns[col]].values)/2,
+    #                   df.columns[col])  for col in range(1,7)]
+
+    # print(xxx)
+    # adjustText.adjust_text(texts, x = xxx[:,0],  y = xxx[:,1], only_move={'point':'','text':'y'})
 
     ax.set_ylabel('Acre Feet')
     ax.set_title('Total Pumping per Caisson')
 
-
     plt.savefig('versions/website_info//total_yearly_pumping.png',dpi = 300, bbox_inches = 'tight')
 
 def plot_total_by_season(wells_df):
-    fig, ax = plt.subplots(6,1, sharex = True, sharey = True, figsize = (10,6), )
+    fig, ax = plt.subplots(6,1, sharex = True, sharey = True, figsize = (10,6))
     # plt.yscale("log")
 
     for cnt in range(6):
@@ -268,19 +262,19 @@ def plot_total_by_season(wells_df):
         if cnt==0:
             ax[cnt].legend(loc = 'upper left', bbox_to_anchor = (1,1))
 
-        ax[cnt].set_ylabel('AF')
+        ax[cnt].set_ylabel('AF/d')
         ax[cnt].annotate(col,
                     xy=(1, 1), xycoords='axes fraction',
                     xytext=(1., 1.), textcoords='axes fraction',
                     bbox=dict(facecolor='wheat'),
                     horizontalalignment='right', verticalalignment='top') 
 
-    plt.suptitle('Total Pumping per Caisson, by Season')
+    plt.suptitle('Average Pumping per Caisson, by Season')
     plt.savefig('versions/website_info//seasonal_pumping.png',dpi = 300, bbox_inches = 'tight')
 
 
 def plot_total_by_season_ts(wells_df):
-    fig, ax = plt.subplots(6,1, sharex = True, sharey = False, figsize = (10,6), )
+    fig, ax = plt.subplots(6,1, sharex = True, sharey = False, figsize = (10,6))
     # plt.yscale("log")
 
     for cnt in range(6):
@@ -293,12 +287,16 @@ def plot_total_by_season_ts(wells_df):
         if cnt==0:
             ax[cnt].legend(loc = 'upper left', bbox_to_anchor = (1,1))
 
-        ax[cnt].set_ylabel('AF')
+        ax[cnt].set_ylabel('AF/d')
         ax[cnt].annotate(col,
                     xy=(1, 1), xycoords='axes fraction',
                     xytext=(1., 1.), textcoords='axes fraction',
                     bbox=dict(facecolor='wheat'),
                     horizontalalignment='right', verticalalignment='top') 
 
-    plt.suptitle('Total Pumping per Caisson, by Season')
+    plt.suptitle('Average Pumping per Caisson, by Season')
     plt.savefig('versions/website_info//seasonal_pumping_ts.png',dpi = 300, bbox_inches = 'tight')
+
+
+if __name__ == "__main__":
+    run_long_context()

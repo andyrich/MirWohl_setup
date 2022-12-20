@@ -67,17 +67,36 @@ def load_wells():
     return wells
     
 def loadcaisson(path, caisson = 'Caisson1Flow.csv', name = 'Well1'):
+    '''
+    load the caissonflow timeseries
+    :param path:
+    :param caisson:
+    :param name:
+    :return: dataframe with series [name]
+    '''
     c = pd.read_csv(path.joinpath(caisson))
     c = c.set_index(pd.to_datetime(c.loc[:,'DateTime'])).loc[:,['Value']].rename(columns = {'Value':name})
     c.index = pd.DatetimeIndex(c.index.date)
     c = c.applymap(basic.isnumber)
     c[c.abs().values > 1e10] = np.nan
+    # interpolate up to 5 days
+    c = c.interpolate(limit = 5)
+    # for gaps bigger than 5 days use the mean for that month
+    c = c.groupby(c.index.to_period('M').to_timestamp('M')).transform(lambda x: x.fillna(x.mean()))
+    # for the remaing gaps, fill with interpolate
     c = c.interpolate()
     # c = c.resample('1D').sum().applymap(basic.isnumber)
     
     return c
 
 def load_pumps(path, name, pumps):
+    '''
+    load given pump data [pumpp] and combine to [name]
+    :param path:
+    :param name:
+    :param pumps:
+    :return:
+    '''
     p1 = loadcaisson(path,caisson = f'Pump{pumps[0]}Flow.csv', name = name)
     p2 = loadcaisson(path,caisson = f'Pump{pumps[1]}Flow.csv', name = name)
     
@@ -90,10 +109,14 @@ def load_pumps(path, name, pumps):
     
     
 def load_caissons():
-    
     '''
+
     get well pumping in feet^3/day
+
+    :return: df of all pumping records
     '''
+    
+
     path = pathlib.Path(r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons")
     
     c1 = loadcaisson(path, caisson = 'Caisson1Flow.csv', name = "well1")
@@ -115,15 +138,27 @@ def load_caissons():
     return df
 
 def get_period(df, start_date, numdays, assign_per = True):
+    '''
+
+    :param df:
+    :param start_date:
+    :param numdays:
+    :param assign_per:
+    :return:
+    '''
 
     # end_days = pd.to_datetime(start_date) + pd.to_timedelta(numdays, unit="D")
     df = df.resample("1D").mean()
     df = df.reindex(index = pd.date_range(start_date, periods = numdays, freq = 'D'))
     df = df.bfill().ffill()
 
+    # there shouldn't be any gaps, but if there are, fill with monthly mean for that month from entire record for that well
     c = df.sum(axis=1) == 0
-
-    df.loc[c,:] = df.mean().mean()
+    df.loc[c, :] = np.nan
+    df = df.groupby(df.index.month).transform(lambda x: x.fillna(x.mean()))
+    # c = df.sum(axis=1) == 0
+    #
+    # df.loc[c,:] = df.mean().mean()
 
     assert (df.sum(axis=1) == 0).sum() == 0, f"there are {(df.sum(axis=1) == 0).sum()} days with zero Q values\n" \
                                            f"the df looks like:\n{df.head()}\n{df.tail()}\n"

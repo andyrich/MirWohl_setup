@@ -12,7 +12,7 @@ import geopandas as gpd
 import conda_scripts.plot_help as ph
 import basic
 import conda_scripts.arich_functions as af
-import cartopy.crs as ccrs
+from matplotlib import ticker
 
 import pathlib
 
@@ -70,6 +70,7 @@ def run(name, m = None, draw_maps = True, add_overland = True, ovr_flux = 0.5):
     if add_overland:
         ovr = read_overland(m)
         ovr.loc[:,'flow_depth'] = ovr_flux/86400
+        plot_ovr(ovr, datestart, out_folder, ovr_flux, numdays=numdays)
     else:
         ovr = pd.DataFrame()
 
@@ -122,6 +123,37 @@ def read_overland(m):
     ovr.loc[:, ['k', 'i', 'j']] = m.dis.get_lrc(list(ovr.loc[:, 'node_grid'].values))
 
     return ovr
+
+
+def plot_ovr(ovr, datestart, folder, recharge_rate, numdays=365):
+    q = ovr.groupby(ovr.index).count().loc[:, ['WSE']] * 200 * 200 * recharge_rate / 43560
+    end_date = (pd.to_datetime(datestart) + pd.to_timedelta(numdays + 5, 'D')).strftime('%m/%d/%Y')
+    q = q.resample('1D').sum()
+    qm = q.max()
+    q = q.loc[datestart:end_date, :].rename(columns={'WSE': "Overland Recharge"})
+    plt.figure(figsize=(6, 6), dpi=300)
+    ax = q.plot(drawstyle="steps-post", linewidth=2, ylabel='recharge (acre-feet)', c='b')
+    ax.set_ylim([0, qm.values[0]]);
+    ax.grid(True);
+    ax.yaxis.get_label().set_color('b')
+    # ax.text(1,1, f'Recharge rate = {recharge_rate}ft.', transform = ax.transAxes, ha = 'right', va = 'bottom')
+    ax.legend().remove()
+    ax.set_title(f'Daily Recharge from Overland Flow.\nRecharge rate = {recharge_rate}ft/d')
+
+    ax2 = ax.twinx()
+
+    p2 = q.cumsum().plot(ax=ax2, label='Cumulative', c='r', ylabel='cumulative recharge (acre-feet)')
+    ax.get_yaxis().set_major_formatter(
+        ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+
+    ax2.get_yaxis().set_major_formatter(
+        ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+
+    ax2.yaxis.get_label().set_color('r')
+
+    plt.savefig(os.path.join(folder, 'ovr_total.png'), bbox_inches='tight', dpi=250, figsize=(6, 6))
+
+    return ax
 
 
 def draw_map_do(pond_grid, out_folder):
