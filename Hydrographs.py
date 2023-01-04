@@ -137,6 +137,9 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
             predvobs.loc[:, 'well'] = station_name
             predvobs.loc[:,'station_no'] = wel['station_no']
             predvobs.loc[:,'label'] = f"{wel['station_no']}, {wel['station_name']}"
+            predvobs.loc[:,'Model Layer'] = idx[0]
+            predvobs.loc[:,  'i_r'] = idx[1]
+            predvobs.loc[:,  'j_c'] = idx[2]
 
             if predvobs.shape[0] == obs.shape[0]:
                 warnings.warn(f"shapes not matching in setup for 1 to 1 in Hydrographs. missing values are" \
