@@ -185,7 +185,7 @@ def shorten_legend(ax, n=20, hand = None, lab = None):
 
 
 def plot_error(datestart, m, out_folder):
-    plist = os.path.join(m.model_ws,  'RRlist.lst')
+    plist = os.path.join(m.model_ws,  'Results','RRlist.lst')
 
     mf_list = mflist.MfListBudget(plist)
     incremental, cumulative = mf_list.get_budget()
@@ -227,7 +227,7 @@ def plot_error(datestart, m, out_folder):
 
 
 def plot_swr_bud(m, datestart, out_folder):
-    plist = os.path.join(m.model_ws,  'RRlist.lst')
+    plist = os.path.join(m.model_ws,   'Results','RRlist.lst')
     swrlist = mflist.SwrListBudget(plist,)
 
     incremental , cum = swrlist.get_dataframes(start_datetime=datestart)

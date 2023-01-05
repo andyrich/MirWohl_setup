@@ -160,7 +160,7 @@ def par_run(run,  numdays = 365,
             basic.write_run_name_to_file(run, 'completed post processing', mode='a')
 
         except Exception as e:
-            basic.write_run_name_to_file(run, e, mode='a')
+            basic.write_run_name_to_file(run, str(e), mode='a')
 
     else:
         basic.write_run_name_to_file(run, 'failed', mode='a')
