@@ -25,17 +25,28 @@ from subprocess import Popen
 import subprocess
 
 def parallel(n = 4):
+    path = os.getcwd()
     base = 'RR_2022'
-
+    os.chdir(base)
+    p = Popen(r'pest\runmaster.bat', creationflags=subprocess.CREATE_NEW_CONSOLE, shell=False)
+    os.chdir(path)
+    print('current directory: ', os.getcwd())
+    # print()
     for i in range(n):
-        dest = f'pest\slave{i}'
+        dest = f'pest\slave{i+1}'
+        print(f"doing {dest}")
         if os.path.exists(dest):
             shutil.rmtree(dest)
 
         shutil.copytree(base, dest)
         print(f"done with {dest}")
-        # p = Popen(run_input, cwd=slave_path, creationflags=subprocess.CREATE_NEW_CONSOLE, shell=False)
+        # print(f"done with {dest}")
+        os.chdir(dest)
 
+        p = Popen(r'pest\run_pest_pp_slave.bat', creationflags=subprocess.CREATE_NEW_CONSOLE, shell=False)
+        os.chdir(path)
+        print('current directory: ', os.getcwd())
+        # p = Popen(r'.\pest\run_pest_pp_slave.bat', cwd=dest, creationflags=subprocess.CREATE_NEW_CONSOLE, shell=False)
 
 def run(run_name, reload=False, ml=None, plot_well_locs = True, plot_hydros = True, skip_fancy = False, add_temp = True ):
     '''
