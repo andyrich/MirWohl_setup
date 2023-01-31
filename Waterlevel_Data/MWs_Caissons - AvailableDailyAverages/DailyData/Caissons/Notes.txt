@@ -1,0 +1,3 @@
+Unit for temperature is Celsius for all caissons.
+Pump flow for each caisson is measured in MGD.
+Water level for each caisson is measured in ft.
