@@ -1,4 +1,37 @@
-{
+{                   "pest2016":{
+                    "name":"pest2016",
+                    "start_date":"1/1/2016",
+                    "numdays":365,
+                    "description":"write-math",
+                    "notes":"",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" : 1.4e-06,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
         "June2020":{
                     "name":"June2020",
                     "start_date":"1/1/2020",
