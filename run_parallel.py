@@ -1,3 +1,8 @@
+import warnings
+
+import pandas as pd
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 import basic
 import SFRtoSWR
 import SFR_calibrate
@@ -17,7 +22,14 @@ import sys
 import hydro_context
 from shutil import copytree, ignore_patterns
 
-def copyfiles(run, starting_heads_from_previous = True):
+def copyfiles(run, starting_heads_from_previous = True, date_start = None):
+    '''
+    copyfiles from source (RR_2022) to new run
+    :param run: run_name from run_names.json
+    :param starting_heads_from_previous: copy heads from previous
+    :param date_start: if left as None will be sourced from run_names.json
+    :return: new_folder
+    '''
 
     EXE_DIR = 'RR_2022'
 
@@ -40,9 +52,16 @@ def copyfiles(run, starting_heads_from_previous = True):
     os.mkdir(os.path.join(new_folder, 'Results'))
 
     if starting_heads_from_previous:
-        p = int(run.strip('June'))
-        if p > 2012:
-            src = os.path.join('temp',f'June{p-1}')
+        # p = int(run.strip('June'))
+        if date_start is None:
+            info, swr_info, sfr_info, riv_keys_info = basic.load_params(run)
+            date_start = info['start_date']
+            # raise ValueError('if you want to use start_heads_from_previous, you need to provide starting date')
+
+        if pd.to_datetime(date_start).year > 2012:
+            # src = os.path.join('temp',f'June{p-1}')
+            year = pd.to_datetime(date_start).year
+            src = os.path.join('initial_heads', f'June{year-1}')
             print(f'copying initial heads from {src} to {new_folder}')
             initial_conditions.set_start_from_path(src, new_folder)
 
