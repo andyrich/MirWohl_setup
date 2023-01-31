@@ -282,7 +282,7 @@ def set_bounds(ax, locname = 'MIRABEL'):
     
     
 def get_swr_reaches(m):
-    with open("RR_2022/RRlist.lst", "r") as lst:
+    with open("RR_2022/Results/RRlist.lst", "r") as lst:
         line = lst.readline()
 
         while line:
