@@ -4,22 +4,22 @@
 # In[1]:
 import shutil
 
-# import flopy
+import flopy
 import os
-# import geopandas as gpd
-# import pandas as pd
-# import numpy as np
-# import matplotlib.pyplot as plt
-# import conda_scripts.utils as utils
-# import conda_scripts.wiski as wiski
-# import pathlib
-# import basic
-# import matplotlib.dates as mdates
-# import conda_scripts.gwplot_fancy as gwp
-# import warnings
-# from flopy.utils import ZoneBudget
-# import conda_scripts.plot_help as ph
-# import re
+import geopandas as gpd
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import conda_scripts.utils as utils
+import conda_scripts.wiski as wiski
+import pathlib
+import basic
+import matplotlib.dates as mdates
+import conda_scripts.gwplot_fancy as gwp
+import warnings
+from flopy.utils import ZoneBudget
+import conda_scripts.plot_help as ph
+import re
 
 from subprocess import Popen
 import subprocess
@@ -591,6 +591,50 @@ def get_wiski():
                             crs=4326).to_crs(2226)
 
     return meta
+
+
+
+def drawdown_hobs():
+
+    """
+    from ayman - still not implemented
+    A script to read hob.out file and compute simulated and observed drawdown.
+
+    """
+
+    # read hob file
+    hob_file = r".\rr_tr.hob.out"
+
+    df = pd.read_csv(hob_file, delim_whitespace=True)
+
+    site_info = df['OBSERVATION NAME'].str.split(".", expand=True)
+    df['site_id'] = site_info[0]
+    df['time_index'] = site_info[1]
+    df.loc[df['time_index'].isna(), 'time_index'] = 0
+
+
+    def compute_draw_down(_df):
+        if len(_df) == 1:
+            _df['sim_drawdown'] = 0
+            _df['obs_drawdown'] = 0
+            return _df
+        else:
+            # sort heads by time
+            _df = _df.sort_values(by='time_index')
+
+            _df['sim_drawdown'] = _df['SIMULATED EQUIVALENT'].diff()
+            _df['obs_drawdown'] = _df['OBSERVED VALUE'].diff()
+
+            # first head has no drawdown-- make it zero instead of nan
+            _df.loc[_df['sim_drawdown'].isna(), 'sim_drawdown'] = 0
+            _df.loc[_df['obs_drawdown'].isna(), 'obs_drawdown'] = 0
+            _df = _df.reset_index(drop = True)
+            return _df
+
+
+    df = df.groupby(['site_id']).apply(compute_draw_down)
+    df.to_csv(r"hob_with_drawdown.csv")
+
 
 if __name__ == 'main':
     parallel(4)
