@@ -190,10 +190,6 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
                 # miny, maxy = obs.loc[:, 'Value'].min(), obs.loc[:, 'Value'].max()
                 # nwp.upleft.set_ylim([np.nanmin([miny, minya]) - 10, np.nanmax([maxy, maxya]) + 10])
 
-            if add_temp:
-                temp = load_temp(wel.loc['Filename'], datestart=datestart, numdays=numdays)
-                if temp.shape[0]>0:
-                    ax = plot_temp(nwp.upleft, temp)
 
             if not skip_gw_data:
                 # re-set xlimits because limits fancy plot are set to 1980
@@ -204,6 +200,11 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
                 nwp.upleft.xaxis.set_minor_locator(mdates.WeekdayLocator())
                 nwp.upleft.xaxis.set_major_formatter(
                     mdates.ConciseDateFormatter(mdates.MonthLocator()))
+
+            if add_temp:
+                temp = load_temp(wel.loc['Filename'], datestart=datestart, numdays=numdays)
+                if temp.shape[0]>0:
+                    ax = plot_temp(nwp.upleft, temp)
 
             nwp.upleft.grid(True, which='minor', linewidth=.2, axis = 'y', c='grey')
             nwp.upleft.grid(True, which='major', linewidth=.5, axis='y', c='black')
@@ -240,6 +241,10 @@ def plot_temp(axin, temp):
     '''
 
 
+    xticks = axin.get_xticks()
+    xlim = axin.get_xlim()
+    lab = axin.get_xticklabels()
+
     ax = axin.twinx()
     ax.scatter(temp.index, temp.Value, c='r', marker='.', ls='None', label='Temp')
     ax.set_ylim([30, 75])
@@ -247,8 +252,13 @@ def plot_temp(axin, temp):
     ax.tick_params(axis='y', colors='red')  # setting up X-axis tick color to red
     ax.spines['right'].set_color('red')  # setting up Y-axis tick color to red
 
-    ax.set(xticklabels=[])  # remove the tick labels
-    ax.tick_params(bottom=False)  # remove the ticks
+    # ax.set(xticklabels=[])  # remove the tick labels
+    # ax.tick_params(bottom=False)  # remove the ticks
+    # ax.set_xlim(xlim[0], xlim[1])
+    #
+    # axin.set_xlim(xlim[0], xlim[1])
+    # axin.set_xticks(xticks)
+    # axin.set_xticklabels(lab)
 
     return ax
 
