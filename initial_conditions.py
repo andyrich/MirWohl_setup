@@ -89,8 +89,6 @@ def set_starting_heads(m, kper = None, plot = False, alt_outpath = None):
         print(f"using stress period: {kx[1]}, ts {kx[0]} as starting heads")
         hds = hdsobj.get_data(kstpkper=kx)
 
-
-
     for i, hdslayer in enumerate(hds):
 
         if alt_outpath is None:
@@ -148,7 +146,7 @@ def set_start_from_path(path, outpath = None, m = None):
 
     for i in range(1,4):
         file = f"start_head_lay{i}.txt"
-        filename = os.path.join(path, 'inputs', file)
+        filename = os.path.join(path, file)
 
         if outpath is None and m is None:
             raise AssertionError('one of outpath or m needs to be defined')
