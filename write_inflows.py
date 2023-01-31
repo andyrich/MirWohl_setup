@@ -24,9 +24,10 @@ def flo_dict():
     return flow
 
 def run(model_name, m = None, minvalue = 29.54,
-    max_value = 38,    numdays = None, datestart = None, cleandamdata = True):
+    max_value = 38,    numdays = None, datestart = None, cleandamdata = True, inflow_limit = 2000):
     '''
     run processing of river inflows, dam stage
+    :param inflow_limit:
     :param model_name:
     :param m:
     :param minvalue:
@@ -58,19 +59,20 @@ def run(model_name, m = None, minvalue = 29.54,
     print(datestart)
     print(out_folder)
 
-
-
     basic.setup_folder(model_name)
     start_year = pd.to_datetime(datestart).year
 
     rr = load_riv(station='11464000', title='Russian River', file='RRinflow.dat', figurename='russian_river.png',
-                  datestart = datestart, out_folder = out_folder, m = m, numdays=numdays, save_fig=True, write_output=True)
+                  datestart = datestart, out_folder = out_folder, m = m, numdays=numdays, save_fig=True, write_output=True,
+                  inflow_limit = inflow_limit)
 
     dry = load_riv(station='11465350', title='Dry Creek', file='Dry_creek.dat', figurename='dry_creek.png',
-                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=True)
+                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=True,
+                   inflow_limit=inflow_limit)
 
     mw = load_riv(station='11466800', title='Mark West Creek', file='MarkWest.dat', figurename='mark_west.png',
-                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=True)
+                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=True,
+                  inflow_limit=inflow_limit)
 
     total = dry.loc[:, 'Q'] + rr.loc[:, 'Q']
     total = total.to_frame('rrtotal')
@@ -122,6 +124,16 @@ def plot_dam(stg,minvalue, max_value,
 
 
 def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109, clean = True):
+    '''
+    load the dam stage
+    :param total: total russain flow from'run'
+    :param datestart:
+    :param minvalue: what to set open dam elevation at
+    :param max_value: closed dam elevation
+    :param numdays:
+    :param clean: remove bad values >50 or <20
+    :return: stg
+    '''
     p = pathlib.Path(
         r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData")
 
@@ -133,6 +145,15 @@ def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109, clean 
         stg.loc[stg.loc[:, 'Value'] > 50, 'Value'] = 50.
         stg.loc[stg.loc[:, 'Value'] < 20, 'Value'] = 20.
 
+    # print(stg.head())
+    stg = stg[~stg.index.duplicated(keep='first')]
+    # # stg = stg.resample('1D').mean()
+    # # stg = stg.drop_duplicates()
+    # print(stg.head())
+    # stg = stg.reindex(pd.date_range(datestart, periods = numdays, freq = 'D'))
+    # print(stg.head())
+    # print(stg.head())
+
     stg.loc[:, 'Original_Value'] = stg.loc[:, 'Value'].copy()
     c = stg.loc[:, 'FillValue'].notnull()
     stg.loc[c, 'Value'] = stg.loc[c, 'FillValue']
@@ -140,8 +161,11 @@ def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109, clean 
     stg.loc[:, 'Value'] = stg.loc[:, 'Value'].interpolate()
 
     stg.loc[:, 'INTERP'] = stg.loc[:, 'INTERP'].replace({'UP': max_value, 'DOWN': minvalue})
-    stg.loc[:, 'INTERP'] = stg.loc[:, 'INTERP'].fillna(method='ffill')
-    stg.loc[:, 'INTERP'] = stg.loc[:, 'INTERP'].rolling(7).mean()
+    stg = stg.reindex(pd.date_range(datestart, periods=numdays, freq='D'))
+    stg.loc[:, 'INTERP'] = stg.loc[:, 'INTERP'].fillna(method='ffill').fillna(method='bfill')
+    stg.loc[:, 'INTERP'] = stg.loc[:, 'INTERP'].rolling(7, min_periods=0).mean()
+    # print(stg.head(10))
+    assert stg.loc[:, 'INTERP'].isnull().sum()== 0, f"there are nans in the INTERP value,\n{stg[stg.loc[:, 'INTERP'].isnull()].index}"
 
     stg.loc[:, "Value"] = stg.loc[:, 'INTERP']
 
@@ -159,13 +183,29 @@ def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109, clean 
     stg = stg.join(total)
 
     assert stg.loc[:, 'Value'].isnull().sum() == 0, 'stage has nans\n'\
-                                                    f'shape of nans\n{stg.loc[:,"Value"].isnull()}\n'\
+                                                    f'shape of nans\n{stg.loc[:,"Value"].isnull().sum()}\n'\
                                                     f'stage nans are\n{stg.loc[stg.loc[:,"Value"].isnull()]}'
 
     return stg
 
 
-def load_riv(station, title, file, figurename, datestart, out_folder, m, numdays = 109, save_fig = True, write_output = True):
+def load_riv(station, title, file, figurename, datestart, out_folder, m, numdays = 109, save_fig = True,
+             write_output = True, inflow_limit = 2000):
+    '''
+    load discharge from gage
+    :param station: USGS number
+    :param title: name of station
+    :param file: model input filename
+    :param figurename: figname
+    :param datestart: srting like '1/1/2000'
+    :param out_folder: folder name of plot
+    :param m: model instance
+    :param numdays: number of days of model run
+    :param save_fig: save the figure
+    :param write_output:
+    :param inflow_limit: to limit stream inflows for model run time
+    :return: df of flow values
+    '''
     start_year = pd.to_datetime(datestart).year
 
     flow, info = af.download_daily(station, start_year, begin_month=1)
@@ -194,7 +234,9 @@ def load_riv(station, title, file, figurename, datestart, out_folder, m, numdays
 
         with open(file, 'w', newline='') as wr:
             # wr.write('OFFSET 0.0 SCALE 1.0\n')
-            flow.rename(columns={flow.columns[0]: '#' + flow.columns[0]}).to_csv(wr, sep='\t', index=False,
+            ftemp = flow.copy()
+            ftemp.loc[ftemp.loc[:,'Q']>inflow_limit,'Q'] = inflow_limit
+            ftemp.rename(columns={ftemp.columns[0]: '#' + ftemp.columns[0]}).to_csv(wr, sep='\t', index=False,
                                                                                  header=False,
                                                                                  mode='a', )
 
