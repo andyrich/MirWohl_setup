@@ -43,7 +43,7 @@ import basic
 # print(datestart)
 # print(out_folder)
 
-def run(run_name, head_frequency = 5, add_basemap = False):
+def run(run_name, head_frequency = 5, add_basemap = False, m = None):
     '''
     Plot heads in each layer; export the heads and head along with gallery html file to view with
     :param run_name:
@@ -61,7 +61,9 @@ def run(run_name, head_frequency = 5, add_basemap = False):
     print(datestart)
     print(out_folder)
 
-    m = basic.load_model()
+    if m is None:
+        m = basic.load_model()
+
     hdsobj = bf.HeadFile(os.path.join(m.model_ws, 'Results','RRbin.hds'))
     hds = hdsobj.get_data(kstpkper=hdsobj.get_kstpkper()[-1])
 

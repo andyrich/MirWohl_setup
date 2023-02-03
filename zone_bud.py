@@ -6,7 +6,7 @@ import basic
 import matplotlib.pyplot as plt
 from flopy.utils import ZoneBudget
 
-def run(name):
+def run(name, ml = None):
     info, swr_info, sfr_info, riv_keys_info = basic.load_params(name)
 
     datestart = info['start_date']
@@ -14,7 +14,9 @@ def run(name):
     # name = info['name']
     out_folder = os.path.join('versions', name)
 
-    ml = basic.load_model()
+    if ml is None:
+        ml = basic.load_model()
+
     cbc_f = os.path.join(ml.model_ws, 'Results', 'RRMF.cbc')
 
     zones = ZoneBudget.read_zone_file(os.path.join(ml.model_ws,'zonebud','zonedbud.zbarr'))

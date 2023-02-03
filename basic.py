@@ -6,14 +6,14 @@ import geopandas as gpd
 import contextily as ctx
 import pandas as pd
 import numpy as np
-import os
+import os, pathlib
 import matplotlib.pyplot as plt
 import conda_scripts.make_map as mp
 import flopy.utils.binaryfile as bf
 import matplotlib.gridspec as gridspec
 import matplotlib as mpl
 import cartopy.crs as ccrs
-
+from io import StringIO
 import shutil
 
 def load_params(run_name = 'calibration'):
@@ -25,7 +25,7 @@ def load_params(run_name = 'calibration'):
 
     import json
 
-    with open("run_names.txt") as json_data_file:
+    with open("run_names.json") as json_data_file:
         data = json.load(json_data_file)
     
     info = data[run_name]
@@ -80,6 +80,31 @@ def setup_folder(run_name):
     replace(src = 'versions/website_info//lay 1 top.png',
             dst = os.path.join('versions', run_name, 'lay 1 top.png'))
 
+    replace(src = 'versions/website_info/waterlevel_trends.html',
+            dst = os.path.join('versions', run_name, 'waterlevel_trends.html'))
+
+def reset_model_files(path, ndays = 365):
+    '''
+    reset model files. because some model runs fail, need to replace files that have wrong number of stress periods.
+    :param m:
+    :return:
+    '''
+    infile = pathlib.Path(path, 'dis_versions', f'RR{ndays}days.dis')
+    outfile = pathlib.Path(path, 'RR.dis')
+    shutil.copyfile(infile, outfile)
+
+    infile = pathlib.Path(path, 'oc_versions', 'rr_all.oc')
+    outfile = pathlib.Path(path, 'rr_all.oc')
+    shutil.copyfile(infile, outfile)
+
+    infile = pathlib.Path(path, 'oc_versions', 'RR.wel')
+    outfile = pathlib.Path(path, 'RR.wel')
+    shutil.copyfile(infile, outfile)
+
+    infile = pathlib.Path(path, 'oc_versions', 'RRMF.rch')
+    outfile = pathlib.Path(path, 'RRMF.rch')
+    shutil.copyfile(infile, outfile)
+
 
 def copy_mod_files(run_name, path=None):
     '''
@@ -123,13 +148,29 @@ def make_model_files_html(run_name):
                 # print(outfile.write(b(v,v)))
 
 
+def load_river_report(year=2020):
+    p = pathlib.Path(r"S:\Ops\RiverReport\Production_and_Demand_Report_PHIST01.xlsm")
+
+    sheet = f"Data_{year}"
+
+    tab = pd.read_excel(p, sheet_name=sheet, header=[3, 4, 5, 6, 7, 8], skiprows=[9, 10, 11, 12], index_col=[0])
+    cc = ',Level 1,Level 2,Level 3,Level 4,Level 5,units,Label\r\n0,Day,Day,Day,Day,Day,Day,Day\r\n1,River Diversion,Midnight to Midnight,Midnight to Midnight,Pump 1,100HP,Runtime,Pump 1 Runtime\r\n2,River Diversion,Midnight to Midnight,Midnight to Midnight,Pump 2,50HP,Runtime,Pump 2 Runtime\r\n3,River Diversion,Midnight to Midnight,Midnight to Midnight,Pump 3,100HP,Runtime,Pump 3 Runtime\r\n4,River Diversion,Midnight to Midnight,Midnight to Midnight,Total,Diversion,AF,Total Diversion\r\n5,River Diversion,Avg,Avg,River,Level,Feet,River Level\r\n6,Caisson 1,Daily,Daily,Average,Depth,Feet,Depth\r\n7,Caisson 1,Daily,Daily,P1 + P2,Runtime,Hours,Runtime\r\n8,Caisson 2,Daily,Daily,Average,Depth,Feet,Depth\r\n9,Caisson 2,Daily,Daily,P3 + P4,Runtime,Hours,Runtime\r\n10,Caisson 3,Daily,Daily,Average,Depth,Feet,Depth\r\n11,Caisson 3,Daily,Daily,P5 + P6,Runtime,Hours,Runtime\r\n12,Caisson 4,Daily,Daily,Average,Depth,Feet,Depth\r\n13,Caisson 4,Daily,Daily,P7 + P8,Runtime,Hours,Runtime\r\n14,Caisson 5,Daily,Daily,Average,Depth,Feet,Depth\r\n15,Caisson 5,Daily,Daily,P9 + P10,Runtime,Hours,Runtime\r\n16,Caisson 6,Daily,Daily,Average,Depth,Feet,Depth\r\n17,Caisson 6,Daily,Daily,P11 + P12,Runtime,Hours,Runtime\r\n18,Production,Midnight to Midnight,Midnight to Midnight,Unnamed: 19_level_3,SR AQ ,MGD,SR AQ \r\n19,Production,Midnight to Midnight,Midnight to Midnight,Unnamed: 20_level_3,Cot AQ ,MGD,Cot AQ \r\n20,Production,Midnight to Midnight,Midnight to Midnight,54-in,Total,MGD,54-in Total MGD\r\n21,Production,Midnight to Midnight,Midnight to Midnight,54-in ,North,MGD,54-in  North MGD\r\n22,Production,Midnight to Midnight,Midnight to Midnight,54-in,South,MGD,54-in South MGD\r\n23,Production,Midnight to Midnight,Midnight to Midnight,Occidental,Well,MGD,Occidental Well MGD\r\n24,Production,Midnight to Midnight,Midnight to Midnight,Sebastopol,Well,MGD,Sebastopol Well MGD\r\n25,Production,Midnight to Midnight,Midnight to Midnight,Todd,Well,MGD,Todd Well MGD\r\n26,Production,Midnight to Midnight,Midnight to Midnight,Todd,Wohler,MGD,Todd Wohler MGD\r\n27,Production,Midnight to Midnight,Midnight to Midnight,Todd,Mirabel,MGD,Todd Mirabel MGD\r\n28,Production,Midnight to Midnight,Midnight to Midnight,Todd,Total,MGD,Todd Total MGD\r\n29,Storage,Midnight,Midnight,Midnight,Total,MG,Total MG\r\n30,Storage,Midnight,Midnight,Midnight,Total,% Full,Total % Full\r\n31,Demand,Demand,Demand,Daily,System,MGD,System MGD\r\n32,Demand,Demand,Demand,Avg 7-Day,System,MGD,System MGD\r\n33,Climate,Daily,Daily,Santa Rosa,Rainfall,Inches,Santa Rosa Rainfall\r\n34,Climate,Daily,Daily,Santa Rosa,Hi Temp,oF,Santa Rosa Hi Temp\r\n35,Climate,Daily,Daily,Santa Rosa,Low Temp,oF,Santa Rosa Low Temp\r\n36,Climate,Daily,Daily,Operations,Rainfall,Inches,Operations Rainfall\r\n37,Climate,Daily,Daily,Operations,Hi Temp,F,Operations Hi Temp\r\n38,Climate,Daily,Daily,Operations,Low Temp,F,Operations Low Temp\r\n39,Climate,Production,Minus,Demand,Negative is Red,MGD,Demand MGD\r\n40,Climate,Production,Minus,Comments,Unnamed: 41_level_4,text,Comments\r\n'
+
+    cind = pd.read_csv(StringIO(cc), sep=',')
+    cind = cind.drop(columns=cind.columns[0])
+
+    tab = pd.DataFrame(tab.values, index=tab.index, columns=pd.MultiIndex.from_frame(cind))
+    tab = tab.droplevel([1, 2, 3, 4, 5], 1)
+    tab = tab.applymap(isnumber)
+
+    return tab
 
 def out_folder(run_name = 'June2015'):
     info, swr, sfr, riv_keys = load_params(run_name)
     
     return os.path.join('versions', info['name'])
 
-def load_model(verbose = False, path = None, nam = 'RRMF.nam'):
+def load_model(verbose = False, path = None, nam = 'RRMF.nam', check = False, forgive = True):
     
     if path is None:
         path = 'RR_2022'
@@ -139,8 +180,10 @@ def load_model(verbose = False, path = None, nam = 'RRMF.nam'):
                                     # load_only= ['DIS', 'BAS6'],
                                     model_ws = path,
                                     verbose = verbose,
+                                    forgive=forgive,
                                     version = 'mfnwt', 
-                                    exe_name = "RR_2022/MODFLOW-NWT_64")
+                                    exe_name = f"{path}/MODFLOW-NWT_64",
+                                    check = check)
     
     
     return ml
@@ -152,6 +195,7 @@ def map_river(m = None, add_basemap = False, fig = None, ax = None, maptype = 'c
     routing = gpd.read_file('GIS/nhd_hr_demo_sfr_routing.shp')
     cells = gpd.read_file('GIS/nhd_hr_demo_sfr_cells.shp')
     outlets = gpd.read_file('GIS/nhd_hr_demo_sfr_outlets.shp')
+    swr = gpd.read_file("GIS/SWR_Reaches.shp")
     model_boundary_5070 = mod.to_crs(epsg=2226)
     # print('creating axes')
     if fig is None and ax is None:
@@ -164,12 +208,11 @@ def map_river(m = None, add_basemap = False, fig = None, ax = None, maptype = 'c
     
     cells.plot('name',ax = ax, zorder = 2, facecolor = 'None')
     routing.plot(ax=ax, zorder=3)
-    outlets.plot(ax=ax, c='red', zorder=4, label='outlets')
+    # outlets.plot(ax=ax, c='red', zorder=4, label='outlets')
     model_boundary_5070.plot(ax=ax, facecolor='None', 
                              edgecolor='gray',
-                             zorder=1
-                            )
-
+                             zorder=1)
+    swr.plot(ax = ax, zorder = 10, facecolor = 'yellow', edgecolor = 'grey')
 
     LegendElement = [
         mpatches.mlines.Line2D([], [], color='red', linewidth=0., marker='o', label='sfr outlet'),
@@ -239,7 +282,7 @@ def set_bounds(ax, locname = 'MIRABEL'):
     
     
 def get_swr_reaches(m):
-    with open("RR_2022/RRlist.lst", "r") as lst:
+    with open("RR_2022/Results/RRlist.lst", "r") as lst:
         line = lst.readline()
 
         while line:
@@ -384,7 +427,55 @@ def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
 
     return fig, axupper, axlower
 
-def write_run_name_to_file(run, state = 'started'):
-    with open(os.path.join('versions', 'current_run.txt'), 'w') as wrt:
-        wrt.write(f"{run}\n")
-        wrt.write(state)
+def write_run_name_to_file(run, state = 'started', mode = 'w'):
+    with open(os.path.join('versions', 'current_run.txt'), mode = mode) as wrt:
+        wrt.write(f"{run} -- {state}\n")
+        # wrt.write(state)
+
+    if state == 'ended':
+        with open(os.path.join('versions', 'allruns.txt'), 'a') as wrt:
+            wrt.write(f"{run}\n")
+
+def check_runs(allruns):
+    '''
+    find which runs have not beend done. check versions/allruns.txt
+    :param allruns:
+    :return:
+    '''
+
+    file = os.path.join('versions', 'allruns.txt')
+
+    if os.path.exists(file):
+        with open(file, 'r') as wrt:
+            done = wrt.readlines()
+
+        done = [r.strip('\n') for r in done]
+
+        print(f'These have already been run:\n{done}\n')
+    else:
+        done = list()
+
+    notdone = [x for x in allruns if not (x in done)]
+
+    print(f'These have not yet ben run:\n{notdone}\n')
+
+    return notdone
+
+
+
+def offset_start_date(run, daysoffset = 30):
+    '''
+    get a start date of 30 days ahead of model start. used for running for initial conditions.
+    :param run:
+    :param daysoffset:
+    :return: string date
+    '''
+
+    info, swr_info, sfr_info, riv_keys_info = load_params(run)
+    datestart = info['start_date']
+
+    date = pd.to_datetime(datestart) - pd.to_timedelta(daysoffset, unit='D')
+
+    date = date.strftime("%m/%d/%Y")
+
+    return date

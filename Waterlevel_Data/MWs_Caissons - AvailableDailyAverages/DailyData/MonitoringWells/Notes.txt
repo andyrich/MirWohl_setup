@@ -1,0 +1,2 @@
+All monitoring wells timeseries are groundwater elevations in ft. 
+Unit for temperature is Fahrenheit for all monitoring wells.

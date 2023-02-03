@@ -1,1 +1,31 @@
 /GIS/nhdplus_vaa.parquet
+/GIS/*.lock
+/GIS/.ipynb_checkpoints/
+/GIS/DEM/
+*.ipynb
+
+/versions/website_info/.ipynb_checkpoints/
+/versions/sfrpt1/
+/versions/sfrpt01/
+/versions/sfrpt02/
+/versions/sfrpt04/
+/versions/sfrpt07/
+/versions/ghbpt1_init/
+/versions/ghbpt01/
+/versions/ghbpt001/
+*/.ipynb_checkpoints/
+/temp/
+/RR_2022/ref/dam_stage/.ipynb_checkpoints/
+*.ipynb_checkpoints/
+/pest/
+/pest/slave1/
+/pest/slave2/
+/pest/slave3/
+/pest/slave4/
+/pest/slave5/
+/pest/slave6/
+/pest/slave7/
+/pest/slave8/
+/RR_2022/.ipynb_checkpoints/
+/Waterlevel_Data/MWs_Caissons - AvailableDailyAverages.zip
+/Waterlevel_Data/MWs_Caissons - AvailableDailyAverages/DailyData/RiverStageDailyBackup.zip

@@ -1,8 +1,7 @@
-{
-        "June2020":{
-                    "name":"June2020",
-                    "start_date":"4/15/2020",
-                    "numdays":109,
+{                   "pest2016":{
+                    "name":"pest2016",
+                    "start_date":"1/1/2016",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -10,7 +9,41 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" : 1.4e-06,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+        "June2020":{
+                    "name":"June2020",
+                    "start_date":"1/1/2020",
+                    "numdays":365,
+                    "description":"write-math",
+                    "notes":"",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -36,8 +69,8 @@
         
         "June2019":{
                     "name":"June2019",
-                    "start_date":"4/15/2019",
-                    "numdays":109,
+                    "start_date":"1/1/2019",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -45,7 +78,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -73,8 +106,8 @@
 
         "June2018":{
                     "name":"June2018",
-                    "start_date":"4/15/2018",
-                    "numdays":109,
+                    "start_date":"1/1/2018",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -82,7 +115,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -108,8 +141,8 @@
         
         "June2017":{
                     "name":"June2017",
-                    "start_date":"4/15/2017",
-                    "numdays":109,
+                    "start_date":"1/1/2017",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -117,7 +150,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -145,8 +178,8 @@
 
     "June2016":{
                     "name":"June2016",
-                    "start_date":"4/15/2016",
-                    "numdays":109,
+                    "start_date":"1/1/2016",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -154,7 +187,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -180,8 +213,8 @@
         
         "June2015":{
                     "name":"June2015",
-                    "start_date":"4/15/2015",
-                    "numdays":109,
+                    "start_date":"1/1/2015",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -189,7 +222,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -214,8 +247,8 @@
                     },
         "June2014":{
                     "name":"June2014",
-                    "start_date":"4/15/2014",
-                    "numdays":109,
+                    "start_date":"1/1/2014",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -223,7 +256,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -249,8 +282,8 @@
 
         "June2013":{
                     "name":"June2013",
-                    "start_date":"4/15/2013",
-                    "numdays":109,
+                    "start_date":"1/1/2013",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -258,7 +291,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,
@@ -285,8 +318,8 @@
         
         "June2012":{
                     "name":"June2012",
-                    "start_date":"6/15/2012",
-                    "numdays":109,
+                    "start_date":"1/1/2012",
+                    "numdays":365,
                     "description":"write-math",
                     "notes":"",
 
@@ -294,7 +327,7 @@
                     "SWR":{
                         "IGEOTYPE" : 3,
                         "IGCNDOP" : 1,
-                        "GMANNING" : 0.025,
+                        "GMANNING" : 0.035,
                         "LEAKANCE" : 1.4e-06,
                         "evap":0,
                         "rain":0,

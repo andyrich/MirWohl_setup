@@ -15,7 +15,7 @@ import flopy.utils.mflistfile as mflist
 import pathlib
 
 
-def run(model_name, ponds_only = False, riv_only = False, plot_buds = True):
+def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = None, numdays = 365):
     '''
 
     :param model_name:
@@ -25,11 +25,14 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True):
     :return:
     '''
 
-    m = basic.load_model(verbose = False)
+    if m is None:
+        m = basic.load_model(verbose = False)
 
     info, swr_info, sfr_info, riv_keys_info = basic.load_params(model_name)
 
     datestart = info['start_date']
+
+    numdays = info['numdays']
 
     out_folder = basic.out_folder(model_name)
 
@@ -57,9 +60,9 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True):
         plot_inflow_outflows(ISWRPQM, out_folder, remove_ponds = remove_ponds)
 
         if not remove_ponds:
-            a,b = plot_ponds(m, datestart, out_folder, numdays=109, ISWRPQAQ = ISWRPQAQ)
+            a,b = plot_ponds(m, datestart, out_folder, numdays=numdays, ISWRPQAQ = ISWRPQAQ)
         if remove_ponds:
-            plot_rds_stage(m, datestart, out_folder, numdays=109, ISWRPQAQ = ISWRPQAQ)
+            plot_rds_stage(m, datestart, out_folder, numdays=numdays, ISWRPQAQ = ISWRPQAQ)
 
     show_structure(ISWRPSTR, out_folder)
 
@@ -69,7 +72,7 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True):
     print('done with budget post-processing')
     return ISWRPQAQ, ISWRPRGF, ISWRPSTG, ISWRPSTR, ISWRPQM
 
-def plot_rds_stage(m, datestart, out_folder, numdays = 109, ISWRPQAQ = None):
+def plot_rds_stage(m, datestart, out_folder, numdays = 365, ISWRPQAQ = None):
     p = pathlib.Path(
         r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData")
 
@@ -87,16 +90,23 @@ def plot_rds_stage(m, datestart, out_folder, numdays = 109, ISWRPQAQ = None):
     if ISWRPQAQ is None:
         ISWRPQAQ, ISWRPRGF, ISWRPSTG, ISWRPSTR, ISWRPQM = SWR(m, datestart, remove_ponds=True)
 
-    ISWRPQAQ = ISWRPQAQ.loc[:, 'STAGE'].droplevel([1, 2, 3, 4, 6]).unstack()
+    ISWRPQAQ = ISWRPQAQ.loc[:, 'STAGE'].droplevel([1, 2, 3, 4, 6]).groupby(level = [0,1]).mean().unstack()
     ISWRPQAQ = ISWRPQAQ.loc[:, ISWRPQAQ.columns.isin([116])].rename(columns = {116: "Reach 116, simulated"})
 
-    ax = ISWRPQAQ.plot(figsize=(15, 10), title='RDS Water Level', color='b')
+    ax = ISWRPQAQ.plot(figsize=(9, 6), title='RDS Water Level', color='b')
 
     stg[stg<100].plot(ax = ax, color = 'k')
 
+    # add manually observed river stage
+    year = pd.to_datetime(datestart).year
+    rds_phist = basic.load_river_report(year)
+    rds_phist = rds_phist.loc[:, 'River Diversion'].loc[:, 'River Level']
+    rds_phist = rds_phist.replace({'N/D': np.nan}).astype(float)
+    rds_phist.plot(ax = ax, c = 'g', label = 'RDS (manually observed)')
+
     plt.savefig(os.path.join(out_folder, 'rds_stage.png'), dpi=250, bbox_inches='tight')
 
-def plot_ponds(m, datestart, out_folder, numdays = 109, ISWRPQAQ = None):
+def plot_ponds(m, datestart, out_folder, numdays = 365, ISWRPQAQ = None):
     if ISWRPQAQ is None:
         ISWRPQAQ, ISWRPRGF, ISWRPSTG, ISWRPSTR, ISWRPQM = SWR(m, datestart, remove_ponds=False)
 
@@ -175,7 +185,7 @@ def shorten_legend(ax, n=20, hand = None, lab = None):
 
 
 def plot_error(datestart, m, out_folder):
-    plist = os.path.join(m.model_ws,  'RRlist.lst')
+    plist = os.path.join(m.model_ws,  'Results','RRlist.lst')
 
     mf_list = mflist.MfListBudget(plist)
     incremental, cumulative = mf_list.get_budget()
@@ -217,7 +227,7 @@ def plot_error(datestart, m, out_folder):
 
 
 def plot_swr_bud(m, datestart, out_folder):
-    plist = os.path.join(m.model_ws,  'RRlist.lst')
+    plist = os.path.join(m.model_ws,   'Results','RRlist.lst')
     swrlist = mflist.SwrListBudget(plist,)
 
     incremental , cum = swrlist.get_dataframes(start_datetime=datestart)
@@ -233,6 +243,9 @@ def plot_swr_bud(m, datestart, out_folder):
 
 def plot_sfr_bud(date_start, m,out_folder,  seg_filter = None, ):
     plist = os.path.join(m.model_ws,  'Results','sfr_output.cbc')
+
+    if not os.path.exists(plist):
+        return None, None
 
     sfrbud = flopy.utils.SfrFile(plist)
 

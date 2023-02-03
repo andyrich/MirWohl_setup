@@ -1,8 +1,4 @@
 import flopy
-import os
-import geopandas as gpd
-import basic
-import contextily as ctx
 import pandas as pd
 import numpy as np
 import os
@@ -12,14 +8,26 @@ import geopandas as gpd
 import conda_scripts.plot_help as ph
 import basic
 import conda_scripts.arich_functions as af
-import cartopy.crs as ccrs
+from matplotlib import ticker
 
 import pathlib
 
 
-def run(name, draw_maps = True):
+def run(name, m = None, draw_maps = True, add_overland = True, ovr_flux = 0.5):
+
+    '''
+    create pond recharge package
+    :param name: name of run
+    :param m: model instance
+    :param draw_maps: make the maps
+    :param add_overland: add overland flow
+    :param ovr_flux: ft/day
+    :return:
+    '''
+
     print('running pond inflows recharge package')
-    m = basic.load_model(name)
+    if m is None:
+        m = basic.load_model(name)
 
     info, swr_info, sfr_info, riv_keys_info = basic.load_params(name)
 
@@ -53,7 +61,14 @@ def run(name, draw_maps = True):
     plt.savefig(os.path.join(out_folder, 'pondQ.png'), dpi=250)
 
     cnt = 0
-    df_cur_roll.to_csv(f"RR_2022/pond_inflows/sum.csv")
+    # df_cur_roll.to_csv(f"RR_2022/pond_inflows/sum.csv")
+
+    if add_overland:
+        ovr = read_overland(m)
+        ovr.loc[:,'flow_depth'] = ovr_flux/86400
+        plot_ovr(ovr, datestart, out_folder, ovr_flux, numdays=numdays)
+    else:
+        ovr = pd.DataFrame()
 
     rech = {}
 
@@ -76,7 +91,15 @@ def run(name, draw_maps = True):
             array = make_array(m, pond, col = 'flow_depth')
         else:
             array = 0.000
-        rech[cnt] = array
+
+        array_ovr = 0.00
+        if add_overland:
+            if ind in ovr.index:
+                ovr_cur = ovr.loc[ovr.index == ind,:]
+                array_ovr = make_array(m, ovr_cur, col='flow_depth')
+
+
+        rech[cnt] = array + array_ovr
 
         cnt = cnt + 1
         print(cnt, end =' ', flush = True)
@@ -89,6 +112,45 @@ def make_rch(m, rech):
     rch = flopy.modflow.ModflowRch(m, ipakcb = 1,  nrchop = 1, rech=rech)
 
     return rch
+
+
+def read_overland(m):
+    ovr = pd.read_csv('Overland_Flow/overland_flow_ts.csv', index_col=[0], parse_dates=True)
+    ovr.loc[:, ['k', 'i', 'j']] = m.dis.get_lrc(list(ovr.loc[:, 'node_grid'].values))
+
+    return ovr
+
+
+def plot_ovr(ovr, datestart, folder, recharge_rate, numdays=365):
+    q = ovr.groupby(ovr.index).count().loc[:, ['WSE']] * 200 * 200 * recharge_rate / 43560
+    end_date = (pd.to_datetime(datestart) + pd.to_timedelta(numdays + 5, 'D')).strftime('%m/%d/%Y')
+    q = q.resample('1D').sum()
+    qm = q.max()
+    q = q.loc[datestart:end_date, :].rename(columns={'WSE': "Overland Recharge"})
+    plt.figure(figsize=(6, 6), dpi=300)
+    ax = q.plot(drawstyle="steps-post", linewidth=2, ylabel='recharge (acre-feet)', c='b')
+    ax.set_ylim([0, qm.values[0]]);
+    ax.grid(True);
+    ax.yaxis.get_label().set_color('b')
+    # ax.text(1,1, f'Recharge rate = {recharge_rate}ft.', transform = ax.transAxes, ha = 'right', va = 'bottom')
+    ax.legend().remove()
+    ax.set_title(f'Daily Recharge from Overland Flow.\nRecharge rate = {recharge_rate}ft/d')
+
+    ax2 = ax.twinx()
+
+    p2 = q.cumsum().plot(ax=ax2, label='Cumulative', c='r', ylabel='cumulative recharge (acre-feet)')
+    ax.get_yaxis().set_major_formatter(
+        ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+
+    ax2.get_yaxis().set_major_formatter(
+        ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+
+    ax2.yaxis.get_label().set_color('r')
+
+    plt.savefig(os.path.join(folder, 'ovr_total.png'), bbox_inches='tight', dpi=250, figsize=(6, 6))
+
+    return ax
+
 
 def draw_map_do(pond_grid, out_folder):
     fig, ax = basic.basic_map(maptype=None)
@@ -127,7 +189,10 @@ def make_array(m, df, col = 'flow_depth'):
 
     array = np.zeros((m.nrow, m.ncol))
 
-    array[df.loc[:,'row']-1, df.loc[:,'column']-1] = df.loc[:,col]
+    if 'row' in df.columns:
+        array[df.loc[:,'row']-1, df.loc[:,'column']-1] = df.loc[:,col]
+    else:
+        array[df.loc[:, 'i'], df.loc[:, 'j']] = df.loc[:, col]
 
     return array
 
