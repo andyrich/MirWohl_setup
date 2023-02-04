@@ -438,7 +438,7 @@ def write_run_name_to_file(run, state = 'started', mode = 'w'):
 
 def check_runs(allruns):
     '''
-    find which runs have not beend done. check versions/allruns.txt
+    find which runs have not been done. check versions/allruns.txt
     :param allruns:
     :return:
     '''

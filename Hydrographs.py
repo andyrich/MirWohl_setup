@@ -330,12 +330,12 @@ def load_obs(name, datestart=None, numdays=109):
     :return:
     '''
 
-    fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
+    fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
 
     # need to check if it's a caisson record. if it is, it needs to be loaded differently
     if isinstance(name, str):
         if 'caisson' in name.lower():
-            fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
+            fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
             caisson = True
         else:
             caisson = False
@@ -373,12 +373,12 @@ def load_temp(name, datestart=None, numdays=365):
     :return:
     '''
 
-    fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
+    fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
 
     # need to check if it's a caisson record. if it is, it needs to be loaded differently
     if isinstance(name, str):
         if 'caisson' in name.lower():
-            fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
+            fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
             caisson = True
         else:
             caisson = False

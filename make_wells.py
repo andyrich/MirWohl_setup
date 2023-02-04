@@ -110,14 +110,14 @@ def load_pumps(path, name, pumps):
     
 def load_caissons():
     '''
-
+`
     get well pumping in feet^3/day
 
     :return: df of all pumping records
     '''
     
 
-    path = pathlib.Path(r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons")
+    path = pathlib.Path(r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons")
     
     c1 = loadcaisson(path, caisson = 'Caisson1Flow.csv', name = "well1")
     c2 = loadcaisson(path, caisson = 'Caisson2Flow.csv', name = "well2")

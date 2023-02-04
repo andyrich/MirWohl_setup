@@ -227,7 +227,7 @@ def run(run_name):
 
 
 
-    xsect_shape = gpd.read_file(r"T:\arich\Russian_River\MirabelWohler_2022\GIS\GEO\RAS_xsections.shp")
+    xsect_shape = gpd.read_file(r"GIS\Stream_GEO\RAS_xsections.shp")
 
 
 
@@ -250,7 +250,7 @@ def run(run_name):
     stream_network = {}
     xsect = {}
     cnt = 1
-    with open(r"T:\arich\Russian_River\MirabelWohler_2022\GIS\GEO\RAS.RASexport.sdf", 'r') as reach:
+    with open(r"GIS\Stream_GEO\RAS.RASexport.sdf", 'r') as reach:
         # next(line for line in reach if  line.startswith("BEGINSTREAMNETWORK:"))
         x = find_(reach,'BEGINSTREAMNETWORK')
         print(x)
@@ -502,9 +502,9 @@ def run(run_name):
 
     # In[36]:
 
-    print(r'exporting SWR reach data to GIS and T:\arich\Russian_River\MirabelWohler_2022\GIS')
+    print(r'exporting SWR reach data to GIS and GIS')
     sfr_filt_with_xsec.to_file('GIS/SWR_Reaches.shp')
-    sfr_filt_with_xsec.to_file(r"T:\arich\Russian_River\MirabelWohler_2022\GIS\SWR_reaches.shp")
+    # sfr_filt_with_xsec.to_file(r"GIS\SWR_reaches.shp")
 
 
     print("\n\n\nDone!\n\n\n")

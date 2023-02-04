@@ -135,7 +135,7 @@ def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109, clean 
     :return: stg
     '''
     p = pathlib.Path(
-        r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData")
+        r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData")
 
     rds = 'RiverStageDaily.csv'
 
