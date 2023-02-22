@@ -24,7 +24,7 @@ import re
 from subprocess import Popen
 import subprocess
 
-def parallel(n = 4):
+def parallel(n = 8):
     path = os.getcwd()
     base = 'RR_2022'
     os.chdir(base)
@@ -594,7 +594,7 @@ def get_wiski():
 
 
 
-def drawdown_hobs():
+def drawdown_hobs(hob_file = r".\rr_tr.hob.out"):
 
     """
     from ayman - still not implemented
@@ -603,7 +603,7 @@ def drawdown_hobs():
     """
 
     # read hob file
-    hob_file = r".\rr_tr.hob.out"
+
 
     df = pd.read_csv(hob_file, delim_whitespace=True)
 
