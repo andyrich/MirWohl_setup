@@ -44,8 +44,8 @@ def run(name, m = None, draw_maps = True, add_overland = True, ovr_flux = 0.5):
     pond_grid = pd.merge(pond_grid, p, left_on='name', right_index=True)
 
     if draw_maps:
-        draw_map_do(pond_grid, out_folder)
-        draw_ponds_map(pond_grid, out_folder)
+        draw_map_do(pond_grid, out_folder, ml = m)
+        draw_ponds_map(pond_grid, out_folder, ml = m)
 
     df, wl = load_pond(datestart)
 
@@ -152,8 +152,8 @@ def plot_ovr(ovr, datestart, folder, recharge_rate, numdays=365):
     return ax
 
 
-def draw_map_do(pond_grid, out_folder):
-    fig, ax = basic.basic_map(maptype=None)
+def draw_map_do(pond_grid, out_folder, ml = None):
+    fig, ax = basic.basic_map(m = ml, maptype=None)
     basic.set_bounds_to_shape(ax, pond_grid.buffer(1000))
     pond_grid.sort_values('name').plot('name', ax=ax, legend=False, edgecolor='k')
     ax.set_title('Mirabel-Wohler Infiltration Ponds Inflow Locations')
@@ -171,8 +171,8 @@ def draw_map_do(pond_grid, out_folder):
 
     plt.savefig(os.path.join(out_folder, 'pondloc_inflow.png'), dpi=250)
 
-def draw_ponds_map(pond_grid, out_folder):
-    fig, ax = basic.basic_map()
+def draw_ponds_map(pond_grid, out_folder, ml = None):
+    fig, ax = basic.basic_map(m = ml)
     basic.set_bounds_to_shape(ax, pond_grid.buffer(5000))
     pond_grid.sort_values('name').plot('name', ax=ax, legend=False, edgecolor='k')
     ax.set_title('Mirabel-Wohler Infiltration Ponds')
