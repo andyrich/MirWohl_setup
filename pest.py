@@ -24,7 +24,7 @@ import re
 from subprocess import Popen
 import subprocess
 
-def parallel(n = 4):
+def parallel(n = 8):
     path = os.getcwd()
     base = 'RR_2022'
     os.chdir(base)
@@ -344,12 +344,12 @@ def load_obs(name, datestart=None, numdays=109):
     :return:
     '''
 
-    fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
+    fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
 
     # need to check if it's a caisson record. if it is, it needs to be loaded differently
     if isinstance(name, str):
         if 'caisson' in name.lower():
-            fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
+            fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
             caisson = True
         else:
             caisson = False
@@ -387,12 +387,12 @@ def load_temp(name, datestart=None, numdays=365):
     :return:
     '''
 
-    fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
+    fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
 
     # need to check if it's a caisson record. if it is, it needs to be loaded differently
     if isinstance(name, str):
         if 'caisson' in name.lower():
-            fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
+            fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
             caisson = True
         else:
             caisson = False
@@ -594,7 +594,7 @@ def get_wiski():
 
 
 
-def drawdown_hobs():
+def drawdown_hobs(hob_file = r".\rr_tr.hob.out"):
 
     """
     from ayman - still not implemented
@@ -603,7 +603,7 @@ def drawdown_hobs():
     """
 
     # read hob file
-    hob_file = r".\rr_tr.hob.out"
+
 
     df = pd.read_csv(hob_file, delim_whitespace=True)
 

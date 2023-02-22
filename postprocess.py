@@ -74,7 +74,7 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = 
 
 def plot_rds_stage(m, datestart, out_folder, numdays = 365, ISWRPQAQ = None):
     p = pathlib.Path(
-        r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData")
+        r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData")
 
     rds = 'RiverStageDaily.csv'
 
@@ -130,7 +130,7 @@ def plot_ponds(m, datestart, out_folder, numdays = 365, ISWRPQAQ = None):
     wl = pd.DataFrame()
     for pond in [1, 2, 3, 4]:
         p = pathlib.Path(
-            r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\InfiltrationPonds")
+            r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\InfiltrationPonds")
 
         p = p.joinpath(f"Pond{pond}WaterLevel.csv")
 

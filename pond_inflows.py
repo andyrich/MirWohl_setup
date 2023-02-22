@@ -165,7 +165,7 @@ def load_pond(datestart):
     wl = pd.DataFrame()
     for pond in [1, 2, 3, 4]:
         p = pathlib.Path(
-            r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\InfiltrationPonds")
+            r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\InfiltrationPonds")
 
         p = p.joinpath(f"Pond{pond}WaterLevel.csv")
 

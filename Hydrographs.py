@@ -186,20 +186,29 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
             nwp.ax_map.set_title('')
 
             if obs.shape[0] > 1:
-                obs.rename(columns={'Value': 'Observed'}).plot(ax=nwp.upleft)
+                obs.reindex(pd.date_range(datestart, freq = 'D', periods = numdays))\
+                    .rename(columns={'Value': 'Observed'}).plot(ax=nwp.upleft)
                 # miny, maxy = obs.loc[:, 'Value'].min(), obs.loc[:, 'Value'].max()
                 # nwp.upleft.set_ylim([np.nanmin([miny, minya]) - 10, np.nanmax([maxy, maxya]) + 10])
 
 
-            if not skip_gw_data:
-                # re-set xlimits because limits fancy plot are set to 1980
-                nwp.upleft.set_xlim(left=head.index.min() - pd.to_timedelta('1 w'),
-                                    right=head.index.max() + pd.to_timedelta('1 w'))
-
-                nwp.upleft.xaxis.set_major_locator(mdates.MonthLocator())
-                nwp.upleft.xaxis.set_minor_locator(mdates.WeekdayLocator())
-                nwp.upleft.xaxis.set_major_formatter(
-                    mdates.ConciseDateFormatter(mdates.MonthLocator()))
+            # if not skip_gw_data:
+            # re-set xlimits because limits fancy plot are set to 1980
+            nwp.upleft.set_xlabel('')
+            nwp.upleft.set_xlim(left=pd.to_datetime(datestart) - pd.to_timedelta('1 w'),
+                                right=pd.to_datetime(datestart) + pd.to_timedelta(numdays + 7, unit = 'D'))
+            basic.set_dates_xtick(nwp.upleft)
+            # locator = mdates.AutoDateLocator(minticks=6, maxticks=18)
+            # formatter = mdates.ConciseDateFormatter(locator)
+            # nwp.upleft.xaxis.set_major_locator(locator)
+            # nwp.upleft.xaxis.set_major_formatter(formatter)
+            # nwp.upleft.set_xlim(left=head.index.min() - pd.to_timedelta('1 w'),
+            #                     right=head.index.max() + pd.to_timedelta('1 w'))
+            # freq = int(2*np.ceil(numdays/365))
+            # nwp.upleft.xaxis.set_major_locator(mdates.MonthLocator(interval = freq))
+            # nwp.upleft.xaxis.set_minor_locator(mdates.AutoDateLocator())
+            # nwp.upleft.xaxis.set_major_formatter(
+            #     mdates.ConciseDateFormatter(mdates.MonthLocator()))
 
             if add_temp:
                 temp = load_temp(wel.loc['Filename'], datestart=datestart, numdays=numdays)
@@ -330,12 +339,12 @@ def load_obs(name, datestart=None, numdays=109):
     :return:
     '''
 
-    fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
+    fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
 
     # need to check if it's a caisson record. if it is, it needs to be loaded differently
     if isinstance(name, str):
         if 'caisson' in name.lower():
-            fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
+            fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
             caisson = True
         else:
             caisson = False
@@ -373,12 +382,12 @@ def load_temp(name, datestart=None, numdays=365):
     :return:
     '''
 
-    fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
+    fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
 
     # need to check if it's a caisson record. if it is, it needs to be loaded differently
     if isinstance(name, str):
         if 'caisson' in name.lower():
-            fold = r"T:\arich\Russian_River\MirabelWohler_2022\Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
+            fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
             caisson = True
         else:
             caisson = False
