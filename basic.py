@@ -15,6 +15,7 @@ import matplotlib as mpl
 import cartopy.crs as ccrs
 from io import StringIO
 import shutil
+import matplotlib.dates as mdates
 
 def load_params(run_name = 'calibration'):
     '''
@@ -479,3 +480,16 @@ def offset_start_date(run, daysoffset = 30):
     date = date.strftime("%m/%d/%Y")
 
     return date
+
+
+def set_dates_xtick(ax):
+    '''
+    set xtick label dates
+    :param ax:
+    :return:
+    '''
+
+    locator = mdates.AutoDateLocator(minticks=6, maxticks=18)
+    formatter = mdates.ConciseDateFormatter(locator)
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(formatter)

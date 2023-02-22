@@ -3,7 +3,7 @@
 /GIS/.ipynb_checkpoints/
 /GIS/DEM/
 *.ipynb
-
+*.ipynb_checkpoints*
 /versions/website_info/.ipynb_checkpoints/
 /versions/sfrpt1/
 /versions/sfrpt01/

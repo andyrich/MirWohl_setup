@@ -190,29 +190,40 @@ def get_well_info(wells, timeseries):
     # print(wells_info.dtypes)
     
     return wells_info
-    
-def plot_pumping(df, out_folder):
-    ax = df.droplevel(1, 0).rename(
-        lambda x: pd.to_datetime(x).strftime("%b\n%d\n%Y") if pd.to_datetime(x).day == 1 else '').mul(
-        1 / 43560).plot.bar(
-        stacked=True, figsize=(9, 6), ylabel='acre-feet', grid=True, title="Total Caisson Pumping, per Well")
 
-    ticks = [n for n, lab in enumerate(ax.get_xticklabels()) if len(lab.get_text()) > 0]
-    ax.set_xticks(ticks)
-    ax.tick_params(axis="x", rotation=0)
-    
+
+def _plot_bar(df):
+    '''
+    plot well pumping df
+    :param df:
+    :return:
+    '''
+    fig, ax = plt.subplots(figsize=(9, 6))
+
+    bottom = df.copy()
+    bottom.insert(0, 0, 0)
+    # modify the base of each columns, can do with a for loop
+    for col in df.columns:
+        bot = bottom.cumsum(axis=1).shift(axis=1).loc[:, col]
+
+        ax.bar(df.droplevel(1, 0).index, df.droplevel(1, 0).cumsum(axis=1).loc[:, col].values, bottom=bot, label=col)
+
+    ax.grid(True)
+    ax.set(ylabel='acre-feet')
+    basic.set_dates_xtick(ax)
+
+    ax.legend()
+
+    return fig, ax
+
+def plot_pumping(df, out_folder):
+
+    fig, ax = _plot_bar(df.mul(1 / 43560))
+    ax.set_title("Total Caisson Pumping, per Well")
     plt.savefig(os.path.join(out_folder, 'pumping.png'), dpi=250, bbox_inches = 'tight')
 
-    #cumulative pumping
-    ax = df.droplevel(1, 0).rename(
-        lambda x: pd.to_datetime(x).strftime("%b\n%d\n%Y") if pd.to_datetime(x).day == 1 else '').mul(
-        1 / 43560).cumsum().plot.bar(
-        stacked=True, figsize=(9, 6), ylabel='acre-feet', grid=True, title="Total Cumulative Caisson Pumping, per Well")
-
-    ticks = [n for n, lab in enumerate(ax.get_xticklabels()) if len(lab.get_text()) > 0]
-    ax.set_xticks(ticks)
-    ax.tick_params(axis="x", rotation=0)
-
+    fig, ax = _plot_bar(df.cumsum().mul(1 / 43560))
+    ax.set_title("Total Cumulative Caisson Pumping, per Well")
     plt.savefig(os.path.join(out_folder, 'pumping_cum.png'), dpi=250, bbox_inches='tight')
 
 def mf_wel(m, ts_data):
