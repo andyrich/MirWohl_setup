@@ -385,7 +385,37 @@ def plot_all_aquifer_props(ml, run_name):
     plt.savefig(fname, bbox_inches = 'tight')
 
     plt.close('all')
-    
+
+
+def load_mod_props(ml):
+    pval = ml.mfpar.pval.pval_dict
+
+    hk1 = np.genfromtxt(os.path.join(ml.model_ws, 'hklay1_thck.txt'), delimiter=',')
+    hk2 = np.genfromtxt(os.path.join(ml.model_ws, 'hklay2_thck.txt'), delimiter=',')
+    hk3 = np.genfromtxt(os.path.join(ml.model_ws, 'hklay3_thck.txt'), delimiter=',')
+
+    hk1 = hk1 * pval['hk_1']
+    hk2 = hk2 * pval['hk_2']
+    hk3 = hk3 * pval['hk_3']
+
+    vk1 = hk1 * pval['vk_1']
+    vk2 = hk2 * pval['vk_2']
+    vk3 = hk3 * pval['vk_3']
+
+    ss1 = np.ones((ml.dis.nrow, ml.dis.ncol)) * pval['ss_1']
+    ss2 = np.ones((ml.dis.nrow, ml.dis.ncol)) * pval['ss_2']
+    ss3 = np.genfromtxt(os.path.join(ml.model_ws, 'sslay3_thck.txt'), delimiter=',')
+    ss3 = ss3 * pval['ss_3']
+
+    sy1 = np.ones((ml.dis.nrow, ml.dis.ncol)) * pval['sy_1']
+    sy2 = np.ones((ml.dis.nrow, ml.dis.ncol)) * pval['sy_2']
+
+    return {'hk1': hk1, 'hk2': hk2, 'hk3': hk3,
+            'vk1': vk1, 'vk2': vk2, 'vk3': vk3,
+            'ss1': ss1, 'ss2': ss2, 'ss3': ss3,
+            'sy1': sy1, 'sy2': sy2}
+
+
 def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
                       cmap =  'viridis', title = "Horizontal Conductivity"):
     plt.figure()
