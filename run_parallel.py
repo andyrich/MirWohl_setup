@@ -21,6 +21,7 @@ import shutil
 import sys
 import hydro_context
 from shutil import copytree, ignore_patterns
+import Streamflows
 
 def copyfiles(run, starting_heads_from_previous = True, date_start = None):
     '''
@@ -150,6 +151,7 @@ def par_run(run,  numdays = 365,
     else:
         try:
             make_wells.run(name=run, m = m)
+
             write_inflows.run(model_name=run, m = m)
             write_pond_inflows_rch.run(run, m = m)
             SFRtoSWR.plot_start_stage(None, os.path.join('versions', run))
@@ -170,7 +172,7 @@ def par_run(run,  numdays = 365,
             basic.setup_folder(run)
             Hydrographs.run(run_name=run, reload = True, ml = m)
             postprocess.run(run, riv_only = True, m= m)
-
+            Streamflows.run(out_folder=os.path.join('versions', run), ml=m)
             post_process_heads.run(run_name=run, head_frequency=10, add_basemap=False, m = m)
             # zone_bud.run(run, ml = m)
 

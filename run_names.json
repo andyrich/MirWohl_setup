@@ -1,4 +1,76 @@
-{         "pest2014trans":{
+{        "sfr_width_test":{
+                    "name":"sfr_width_test",
+                    "start_date":"1/1/2014",
+                    "numdays":1095,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 1.049025800000000e-005,
+                      "swrk2016": 3.501332000000000e-006,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+  "pilot_points1":{
+                    "name":"pilot_points1",
+                    "start_date":"1/1/2014",
+                    "numdays":1095,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 1.049025800000000e-005,
+                      "swrk2016": 3.501332000000000e-006,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+  "pest2014trans":{
                     "name":"pest2014trans",
                     "start_date":"1/1/2014",
                     "numdays":1095,
