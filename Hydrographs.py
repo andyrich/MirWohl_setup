@@ -106,13 +106,15 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
     :param numdays:
     :return: obsall (predicted versus observed)
     '''
-    hds, hdsobj = basic.get_heads(ml)
+    _, hdsobj = basic.get_heads(ml, return_final= False)
     partics = os.path.join(out_folder, 'hydrographs')
     obsall = pd.DataFrame()
 
     nwells = 0
     passed_wells = []
     plotted_wells = []
+
+    print(f'saving hydrographs to:\n\t{out_folder}')
 
     for _, wel in wells_mod.sort_values('station_no').iterrows():
         station_name = wel['station_name']
@@ -228,6 +230,8 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
             plt.close(plt.gcf())
             plt.close('all')
             plt.clf()
+            print(os.path.abspath(filename))
+            assert os.path.exists(filename), f'file does not exist\n{filename}'
 
             del nwp
 
