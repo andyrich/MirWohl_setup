@@ -50,6 +50,9 @@ def setup_folder(run_name):
     if not os.path.exists(os.path.join('versions', run_name, 'hydrographs')):
         os.mkdir(os.path.join('versions', run_name, 'hydrographs'))
 
+    if not os.path.exists(os.path.join('versions', run_name, 'streamflow')):
+        os.mkdir(os.path.join('versions', run_name, 'streamflow'))
+
     if not os.path.exists(os.path.join('versions', run_name, 'wl_maps')):
         os.mkdir(os.path.join('versions', run_name, 'wl_maps'))
 
@@ -171,14 +174,36 @@ def out_folder(run_name = 'June2015'):
     
     return os.path.join('versions', info['name'])
 
-def load_model(verbose = False, path = None, nam = 'RRMF.nam', check = False, forgive = True):
+def load_model(verbose = False, path = None, nam = 'RRMF.nam', check = False, forgive = True,
+               load_fast = True):
+    '''
+
+    :param verbose:
+    :param path:
+    :param nam:
+    :param check:
+    :param forgive:
+    :param load_fast: if True will skip HOB as it takes long time to load.
+                    if list will load list. if False loads all
+    :return: ml
+    '''
     
     if path is None:
         path = 'RR_2022'
 
+    if load_fast is True :
+        load_only = ['DIS', 'BAS6', 'UPW', 'NWT', 'WEL', 'GHB', 'OC', 'SFR', 'RCH', 'GAGE']
+        print(f'loading {load_only}')
+    elif isinstance(load_fast, list):
+        load_only = load_fast
+        print(f'loading {load_only}')
+    else:
+        load_only = None
+        print(f'loading all packages...')
+
     print(path)
     ml = flopy.modflow.Modflow.load(nam,
-                                    # load_only= ['DIS', 'BAS6'],
+                                    load_only= load_only,
                                     model_ws = path,
                                     verbose = verbose,
                                     forgive=forgive,
@@ -346,9 +371,13 @@ def get_mg(xx,yy,mg):
     
     return f
 
-def get_heads(m):
+def get_heads(m, return_final = True):
     hdsobj = bf.HeadFile(os.path.join(m.model_ws, 'Results','RRbin.hds'))
-    hds = hdsobj.get_data(kstpkper=hdsobj.get_kstpkper()[-1])
+
+    if return_final:
+        hds = hdsobj.get_data(kstpkper=hdsobj.get_kstpkper()[-1])
+    else:
+        hds = None
     
     return hds, hdsobj
 
@@ -385,6 +414,79 @@ def plot_all_aquifer_props(ml, run_name):
     plt.savefig(fname, bbox_inches = 'tight')
 
     plt.close('all')
+
+
+def load_pilot_point_calibrated_props(ml,ppfolder, load_best=True):
+    '''
+    load arrays from pilot point output folder, taking into account value of pval file
+    :param ml:
+    :param ppfolder:
+    :param load_best:
+    :return:
+    '''
+    if load_best:
+        pv = pd.read_csv(os.path.join(ml.model_ws, ppfolder, 'pval.PVAL'), sep='\s+').rename(columns={'11': 'pval'})
+        pval = pv.rename(lambda x: x.lower()).pval.to_dict()
+    else:
+        pval = ml.mfpar.pval.pval_dict
+
+    hk1 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'hk1.txt'))
+    hk2 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'hk2.txt'))
+    hk3 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'hk3.txt'))
+
+    hk1 = hk1 * pval['hk_1']
+    hk2 = hk2 * pval['hk_2']
+    hk3 = hk3 * pval['hk_3']
+
+    vk1 = hk1 * pval['vk_1']
+    vk2 = hk2 * pval['vk_2']
+    vk3 = hk3 * pval['vk_3']
+
+    ss1 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'ss1.txt'))
+    ss2 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'ss2.txt'))
+    ss3 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'ss3.txt'))
+    ss1 = ss1 * pval['ss_1']
+    ss2 = ss2 * pval['ss_2']
+    ss3 = ss3 * pval['ss_3']
+
+    sy1 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'sy1.txt')) * pval['sy_1']
+    sy2 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'sy2.txt')) * pval['sy_2']
+
+    return {'hk1': hk1, 'hk2': hk2, 'hk3': hk3,
+            'vk1': vk1, 'vk2': vk2, 'vk3': vk3,
+            'ss1': ss1, 'ss2': ss2, 'ss3': ss3,
+            'sy1': sy1, 'sy2': sy2, }, pval
+
+
+def plot_aquifer_props_pilot_points(ml, ppfolder, out_folder, load_best):
+    '''
+    plot pilot point aquifer properties
+    :param ml: model instance
+    :param ppfolder: name of pilot point folder in run
+    :param out_folder: where files will be written
+    :param load_best: load pval values (false) or load values from pilot point folder
+    :return:
+    '''
+
+    ppar, pval = load_pilot_point_calibrated_props(ml, ppfolder, load_best=load_best)
+
+    plot_aquifer_prop(ml, np.stack([ppar['hk1'], ppar['hk2'], ppar['hk3'], ]), vmax=.1)
+    plt.savefig(os.path.join(ml.model_ws, ppfolder, 'pp_hk.png'), dpi=250)
+    plt.savefig(os.path.join(out_folder, 'hk.png'), dpi=250)
+
+    plot_aquifer_prop(ml, np.stack([ppar['vk1'], ppar['vk2'], ppar['vk3'], ]), vmin=1e-7, vmax=.01,
+                            title='Vertical Conductivity')
+    plt.savefig(os.path.join(ml.model_ws, ppfolder, 'pp_vk.png'), dpi=250)
+    plt.savefig(os.path.join(out_folder, 'vk.png'), dpi=250)
+    plot_aquifer_prop(ml, np.stack([ppar['ss1'], ppar['ss2'], ppar['ss3'], ]), vmin=1e-6, vmax=0.01,
+                            title='Specific Storage')
+    plt.savefig(os.path.join(ml.model_ws, ppfolder, 'pp_ss.png'), dpi=250)
+    plt.savefig(os.path.join(out_folder, 'ss.png'), dpi=250)
+    plot_aquifer_prop(ml, np.stack([ppar['sy1'], ppar['sy2'], ppar['sy2'] * 0, ]), vmin=.01, vmax=.3,
+                            title='Specific Yield')
+    plt.savefig(os.path.join(ml.model_ws, ppfolder, 'pp_sy.png'),
+                dpi=250)  # basic.plot_aquifer_prop(ml, np.stack([ppar['hk1'], ar['hk1'], ar['hk1'], ]), vmax = .01)
+    plt.savefig(os.path.join(out_folder, 'sy.png'), dpi=250)
 
 
 def load_mod_props(ml):
@@ -523,3 +625,40 @@ def set_dates_xtick(ax):
     formatter = mdates.ConciseDateFormatter(locator)
     ax.xaxis.set_major_locator(locator)
     ax.xaxis.set_major_formatter(formatter)
+
+
+def add_subindex_fields(file, h1, fields):
+    '''
+    add h1 section to subindex file if not present. then add fields
+    :param file: path to subindex file
+    :param h1: heading title. will search for this. if already present, will exit
+    :param fields: add pairs of href (filename path), and label.
+    :return:
+    '''
+
+    if os.path.exists(file):
+        print(f"file exists\n{file}\n")
+    else:
+        import warnings
+        warnings.warn(f"file does not exist. ending add_subindex_fields\n{file}\n")
+        return
+
+    with open(file, 'r') as myfile:
+        if h1 in myfile.read():
+            present = True
+            print(f"Not adding fields to subindex because {h1} already is listed")
+        else:
+            present = False
+
+    if not present:
+        with open(file, 'a') as myfile:
+            myfile.write('\n\n')
+            myfile.write("<h1>{:}</h1>\n".format(h1))
+
+            for k in fields:
+                fileref = fields[k]
+                part = """<a href="{:}">{:}<br></a>\n""".format(fileref, k)
+                myfile.write(part)
+
+        print('Done adding fields to subindex.')
+
