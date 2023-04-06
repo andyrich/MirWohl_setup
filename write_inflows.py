@@ -43,6 +43,7 @@ def run(model_name, m = None, minvalue = 29.54,
 
     info, swr_info, sfr_info, riv_keys_info = basic.load_params(model_name)
 
+    nswr_cells = swr_info['SWR_ncells']
     if datestart is None:
         datestart = info['start_date']
     else:
@@ -82,9 +83,9 @@ def run(model_name, m = None, minvalue = 29.54,
     plot_dam(stg, minvalue=minvalue, max_value=max_value,
               out_folder = out_folder)
 
-    f =    "1         1       0      11         51      9\n \
-    116       1       0        6          0.61   0.5  {:}          200.00       0.1       1     56    1 #{:}\n"
-    f.format(1,2)
+    f =    "1         1       0      11         51      25\n \
+    {:}       1       0        6          0.5   0.5  {:}          200.00       0.5       1     55    1 #{:}\n"
+    # f.format(1,2)
 
     cnt = 0
     for ind, d in stg.iterrows():
@@ -93,7 +94,7 @@ def run(model_name, m = None, minvalue = 29.54,
         name = os.path.join(m.model_ws, f"ref/dam_stage/day{cnt}.dat")
         # print(name)
         with open(name,'w') as out:
-            out.write(f.format(d['Value'], ind.strftime("%y %b %d")))
+            out.write(f.format(nswr_cells, d['Value'], ind.strftime("%y %b %d")))
 
         cnt = cnt+1
 

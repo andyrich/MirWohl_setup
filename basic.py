@@ -416,7 +416,7 @@ def plot_all_aquifer_props(ml, run_name):
     plt.close('all')
 
 
-def load_pilot_point_calibrated_props(ml,ppfolder, load_best=True):
+def load_pilot_point_calibrated_props(ml,ppfolder, load_best=True, load_raw_arrays = False):
     '''
     load arrays from pilot point output folder, taking into account value of pval file
     :param ml:
@@ -429,6 +429,9 @@ def load_pilot_point_calibrated_props(ml,ppfolder, load_best=True):
         pval = pv.rename(lambda x: x.lower()).pval.to_dict()
     else:
         pval = ml.mfpar.pval.pval_dict
+
+    if load_raw_arrays:
+        pval = {x: 1.0 for x in pval.keys()}
 
     hk1 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'hk1.txt'))
     hk2 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'hk2.txt'))
@@ -527,7 +530,9 @@ def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
 
     axupper = []
     axlower = []
-    for lay in range(3):
+    nlay = get_num_lays(ml)
+
+    for lay in range(nlay):
         ax = fig.add_subplot(gs[0, lay], projection = ccrs.epsg(2226))
 
         mapview = flopy.plot.PlotMapView(ml,ax = ax)
@@ -559,6 +564,16 @@ def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
     fig.suptitle(title)
 
     return fig, axupper, axlower
+
+def get_num_lays(ml):
+    '''
+    get number of layers from ibound. because layer 3 basicall turned off via ibound only
+
+    :return integer
+    '''
+    nlays = sum([~np.alltrue(ml.bas6.ibound.array[lay] == 0) for lay in range(ml.nlay)])
+
+    return nlays
 
 def write_run_name_to_file(run, state = 'started', mode = 'w'):
     with open(os.path.join('versions', 'current_run.txt'), mode = mode) as wrt:

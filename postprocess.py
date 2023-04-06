@@ -15,7 +15,7 @@ import flopy.utils.mflistfile as mflist
 import pathlib
 
 
-def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = None, numdays = 365):
+def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = None, max_reach = 116):
     '''
 
     :param model_name:
@@ -48,7 +48,7 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = 
 
     for remove_ponds in r:
         ISWRPQAQ, ISWRPRGF, ISWRPSTG, ISWRPSTR, ISWRPQM = SWR(m, datestart,
-                                                              remove_ponds = remove_ponds)
+                                                              remove_ponds = remove_ponds, max_reach = max_reach)
         show_stats(ISWRPQAQ, out_folder, remove_ponds=remove_ponds)
 
         plot_stages(ISWRPQAQ, out_folder, remove_ponds = remove_ponds)
@@ -62,7 +62,7 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = 
         if not remove_ponds:
             a,b = plot_ponds(m, datestart, out_folder, numdays=numdays, ISWRPQAQ = ISWRPQAQ)
         if remove_ponds:
-            plot_rds_stage(m, datestart, out_folder, numdays=numdays, ISWRPQAQ = ISWRPQAQ)
+            plot_rds_stage(m, datestart, out_folder, numdays=numdays, ISWRPQAQ = ISWRPQAQ, max_reach=max_reach)
 
     show_structure(ISWRPSTR, out_folder)
 
@@ -72,7 +72,7 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = 
     print('done with budget post-processing')
     return ISWRPQAQ, ISWRPRGF, ISWRPSTG, ISWRPSTR, ISWRPQM
 
-def plot_rds_stage(m, datestart, out_folder, numdays = 365, ISWRPQAQ = None):
+def plot_rds_stage(m, datestart, out_folder, numdays = 365, ISWRPQAQ = None, max_reach = 116):
     p = pathlib.Path(
         r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData")
 
@@ -91,7 +91,7 @@ def plot_rds_stage(m, datestart, out_folder, numdays = 365, ISWRPQAQ = None):
         ISWRPQAQ, ISWRPRGF, ISWRPSTG, ISWRPSTR, ISWRPQM = SWR(m, datestart, remove_ponds=True)
 
     ISWRPQAQ = ISWRPQAQ.loc[:, 'STAGE'].droplevel([1, 2, 3, 4, 6]).groupby(level = [0,1]).mean().unstack()
-    ISWRPQAQ = ISWRPQAQ.loc[:, ISWRPQAQ.columns.isin([116])].rename(columns = {116: "Reach 116, simulated"})
+    ISWRPQAQ = ISWRPQAQ.loc[:, ISWRPQAQ.columns.isin([max_reach])].rename(columns = {max_reach: f"Reach {max_reach}, simulated"})
 
     ax = ISWRPQAQ.plot(figsize=(9, 6), title='RDS Water Level', color='b')
 
