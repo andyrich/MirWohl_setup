@@ -47,7 +47,7 @@ def run(name, m = None, draw_maps = True, add_overland = True, ovr_flux = 0.5):
         draw_map_do(pond_grid, out_folder, ml = m)
         draw_ponds_map(pond_grid, out_folder, ml = m)
 
-    df, wl = load_pond(datestart)
+    df = load_pond()
 
     df_cur = get_period(df, datestart, numdays)
     inflow_fraction = {'One': 0, 'Two': .5, 'Three': .5, "Four": 0}
@@ -234,10 +234,13 @@ def isnumber(x):
         return np.nan
 
 
-def load_pond(datestart):
-    year = pd.to_datetime(datestart).year
+def load_pond():
+    # year = pd.to_datetime(datestart).year
 
-    df = load_phist(year)
+    df = pd.DataFrame()
+    for year in range(2012, 2023):
+        idf = load_phist(year)
+        df = pd.concat([df, idf])
 
     df = df.loc[:, 'River Diversion'].iloc[:, :3].droplevel([0, 1, 3, 4], axis=1)
 
@@ -249,28 +252,28 @@ def load_pond(datestart):
     df.loc[:, 'Pump 2'] = df.loc[:, 'Pump 2'] * 9000 * 60 / (7.48 * 60 * 60 * 24)
     df.loc[:, 'Pump 3'] = df.loc[:, 'Pump 3'] * 18000 * 60 / (7.48 * 60 * 60 * 24)
 
-    # get water levels
-    wl = pd.DataFrame()
-    for pond in [1, 2, 3, 4]:
-        p = pathlib.Path(
-            r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\InfiltrationPonds")
+    # # get water levels
+    # wl = pd.DataFrame()
+    # for pond in [1, 2, 3, 4]:
+    #     p = pathlib.Path(
+    #         r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\InfiltrationPonds")
+    #
+    #     p = p.joinpath(f"Pond{pond}WaterLevel.csv")
+    #
+    #     c = pd.read_csv(p)
+    #     c.loc[:, 'Value'] = c.loc[:, 'Value'].apply(isnumber)
+    #     c = c.astype({'Value': np.float64})
+    #     c = c.set_index(pd.to_datetime(c.loc[:, 'DateTime']))
+    #     c = c.loc[:, ['Value']].resample('1D').mean()
+    #     c = c.rename(columns={"Value": f"Pond{pond}"})
+    #     wl = wl.join(c, how='outer')
+    #
+    # wl[wl.abs() > 100] = np.nan
+    # wl[wl < 0] = 0.
+    #
+    # wl = wl.interpolate('spline', order=2)
 
-        p = p.joinpath(f"Pond{pond}WaterLevel.csv")
-
-        c = pd.read_csv(p)
-        c.loc[:, 'Value'] = c.loc[:, 'Value'].apply(isnumber)
-        c = c.astype({'Value': np.float64})
-        c = c.set_index(pd.to_datetime(c.loc[:, 'DateTime']))
-        c = c.loc[:, ['Value']].resample('1D').mean()
-        c = c.rename(columns={"Value": f"Pond{pond}"})
-        wl = wl.join(c, how='outer')
-
-    wl[wl.abs() > 100] = np.nan
-    wl[wl < 0] = 0.
-
-    wl = wl.interpolate('spline', order=2)
-
-    return df, wl
+    return df
 
 
 def get_period(df, start_date, numdays):
@@ -290,5 +293,3 @@ if __name__ == "__main__":
     print('running')
     run('June2015')
     print("Executed when invoked directly")
-else:
-    print("Executed when imported")
