@@ -24,9 +24,10 @@ def flo_dict():
     return flow
 
 def run(model_name, m = None, minvalue = 29.54,
-    max_value = 38,    numdays = None, datestart = None, cleandamdata = True, inflow_limit = 2000):
+    max_value = 38,    numdays = None, datestart = None, cleandamdata = True, inflow_limit = 2000, write_output = True):
     '''
     run processing of river inflows, dam stage
+    :param write_output:
     :param inflow_limit:
     :param model_name:
     :param m:
@@ -64,15 +65,15 @@ def run(model_name, m = None, minvalue = 29.54,
     start_year = pd.to_datetime(datestart).year
 
     rr = load_riv(station='11464000', title='Russian River', file='RRinflow.dat', figurename='russian_river.png',
-                  datestart = datestart, out_folder = out_folder, m = m, numdays=numdays, save_fig=True, write_output=True,
+                  datestart = datestart, out_folder = out_folder, m = m, numdays=numdays, save_fig=True, write_output=write_output,
                   inflow_limit = inflow_limit)
 
     dry = load_riv(station='11465350', title='Dry Creek', file='Dry_creek.dat', figurename='dry_creek.png',
-                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=True,
+                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=write_output,
                    inflow_limit=inflow_limit)
 
     mw = load_riv(station='11466800', title='Mark West Creek', file='MarkWest.dat', figurename='mark_west.png',
-                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=True,
+                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=write_output,
                   inflow_limit=inflow_limit)
 
     total = dry.loc[:, 'Q'] + rr.loc[:, 'Q']
@@ -80,23 +81,24 @@ def run(model_name, m = None, minvalue = 29.54,
 
     stg = load_dam(total, datestart=datestart, minvalue=minvalue, max_value=max_value, numdays=numdays, clean = cleandamdata)
 
-    plot_dam(stg, minvalue=minvalue, max_value=max_value,
-              out_folder = out_folder)
+    if write_output:
+        plot_dam(stg, minvalue=minvalue, max_value=max_value,
+                  out_folder = out_folder)
 
-    f =    "1         1       0      11         51      25\n \
-    {:}       1       0        6          0.5   0.5  {:}          200.00       0.5       1     55    1 #{:}\n"
-    # f.format(1,2)
+        f =    "1         1       0      11         51      25\n \
+        {:}       1       0        6          0.5   0.5  {:}          200.00       0.5       1     55    1 #{:}\n"
+        # f.format(1,2)
 
-    cnt = 0
-    for ind, d in stg.iterrows():
-        # print(d['Value'])
-        # print(ind)
-        name = os.path.join(m.model_ws, f"ref/dam_stage/day{cnt}.dat")
-        # print(name)
-        with open(name,'w') as out:
-            out.write(f.format(nswr_cells, d['Value'], ind.strftime("%y %b %d")))
+        cnt = 0
+        for ind, d in stg.iterrows():
+            # print(d['Value'])
+            # print(ind)
+            name = os.path.join(m.model_ws, f"ref/dam_stage/day{cnt}.dat")
+            # print(name)
+            with open(name,'w') as out:
+                out.write(f.format(nswr_cells, d['Value'], ind.strftime("%y %b %d")))
 
-        cnt = cnt+1
+            cnt = cnt+1
 
     return rr, dry, mw, total, stg
 
