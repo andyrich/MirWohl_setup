@@ -53,7 +53,7 @@ def run(name, m = None, draw_maps = True, add_overland = True, ovr_flux = 0.5):
     inflow_fraction = {'One': 0, 'Two': .5, 'Three': .5, "Four": 0}
 
     ax = df_cur.plot(ylabel='feet$^3$/s', figsize=(7, 7))
-    df_cur_roll = df_cur.rolling(5, min_periods=0).mean(center=False)
+    df_cur_roll = df_cur.rolling(5, min_periods=0,center=False).mean()
 
     df_cur_roll.rename(columns={'Value': 'Value, Rolled'}).plot.area(ax=ax)
     ax.set_title('Pond Inflows, Split Between 2 and 3')
@@ -147,7 +147,7 @@ def plot_ovr(ovr, datestart, folder, recharge_rate, numdays=365):
 
     ax2.yaxis.get_label().set_color('r')
 
-    plt.savefig(os.path.join(folder, 'ovr_total.png'), bbox_inches='tight',  figsize=(6, 6))
+    plt.savefig(os.path.join(folder, 'ovr_total.png'), bbox_inches='tight')
 
     return ax
 

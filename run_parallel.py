@@ -22,6 +22,8 @@ import sys
 import hydro_context
 from shutil import copytree, ignore_patterns
 import Streamflows
+import traceback
+
 
 def copyfiles(run, starting_heads_from_previous = True, date_start = None):
     '''
@@ -45,7 +47,7 @@ def copyfiles(run, starting_heads_from_previous = True, date_start = None):
             print(f'could not remove folder {new_folder}')
 
     try:
-        shutil.copytree(EXE_DIR, new_folder, ignore = ignore_patterns('*.git'))
+        shutil.copytree(EXE_DIR, new_folder, ignore = ignore_patterns('*.git', "reg_pest*", "pp_pest*"))
     except:
         shutil.rmtree(os.path.join(new_folder))
 
@@ -68,12 +70,16 @@ def copyfiles(run, starting_heads_from_previous = True, date_start = None):
 
     return new_folder
 
-def par_run(run,  numdays = 365,
+def par_run(run,  numdays = None,
             post_process_only = False,
             skip_setup = False,
             check_for_success = True,
             copyfiles_from_base = True,
-            do_pre_run = False):
+            do_pre_run = False,
+            model_dir = None,
+            starting_heads_from_previous = False,
+            set_starting_heads_after = False,
+            do_zone_bud = False):
 
     '''
     run single model with name 'run' in the path.
@@ -84,7 +90,12 @@ def par_run(run,  numdays = 365,
     :param post_process_only:
     :param run:
     :param numdays:
-    :return:
+    :param model_dir: model_dir to model_dir (if None will be assumed to be temp/{run})
+    :param starting_heads_from_previous: use the end of the previous year to set as staring condition
+    :param set_starting_heads_after: after run is complete, set starting heads file.
+                not implemented for multiyear runs correctly
+    :param do_zone_bud: do zone bud
+    :return: None
     '''
 
     if post_process_only:
@@ -92,6 +103,24 @@ def par_run(run,  numdays = 365,
         check_for_success = False
         copyfiles_from_base = False
         do_pre_run = False
+        starting_heads_from_previous = False
+
+
+
+
+    if copyfiles_from_base:
+        model_dir = copyfiles(run, starting_heads_from_previous=starting_heads_from_previous)
+    elif model_dir is None:
+        model_dir = os.path.join('temp', run)
+    else:
+        if os.path.exists(model_dir):
+            print('using user defined model_dir')
+        else:
+            raise AssertionError(f'folder does not exist for model_dir\n{model_dir}')
+
+    if numdays is None:
+        info, swr_info, sfr_info, riv_keys_info = basic.load_params(run)
+        numdays = info['numdays']
 
     print(f"\n\n\n\nnumdays = {numdays},\n\
             post_process_only = {post_process_only},\n\
@@ -99,12 +128,6 @@ def par_run(run,  numdays = 365,
             check_for_success = {check_for_success},\n\
             copyfiles_from_base = {copyfiles_from_base},\n\
             do_pre_run = {do_pre_run}\n\n\n")
-
-
-    if copyfiles_from_base:
-        path = copyfiles(run, starting_heads_from_previous=True)
-    else:
-        path = os.path.join('temp', run)
 
     print('\n\n\n\n\n----------------------')
     print(run)
@@ -114,14 +137,17 @@ def par_run(run,  numdays = 365,
     else:
         try:
             basic.setup_folder(run)
-            basic.reset_model_files(path = path)
+            # basic.reset_model_files(path = model_dir)
             basic.write_run_name_to_file(run, 'started', mode = 'a')
             hydro_context.run_current_context(run)
             # SFRtoSWR.run(run_name = run)
         except Exception as e:
+            warnings.warn(f"failed bc of\n{e}")
+            print( traceback.format_exc())
+
             basic.write_run_name_to_file(run, 'failed set up   ' + e, mode='a')
 
-    m = basic.load_model(path=path)
+    m = basic.load_model(path=model_dir)
     print(f"model ws {m.model_ws}")
     print(f"model exe {m.exe_name}")
 
@@ -142,7 +168,10 @@ def par_run(run,  numdays = 365,
 
         success = initial_conditions.rerun_for_initial_cond(m, 1)
 
-        m = basic.load_model(path = path)
+        if not success:
+            raise ValueError('Model did not run successfully on pre-run')
+
+        m = basic.load_model(path = model_dir)
     else:
         print('not doing pre-run')
 
@@ -154,9 +183,13 @@ def par_run(run,  numdays = 365,
 
             write_inflows.run(model_name=run, m = m)
             write_pond_inflows_rch.run(run, m = m)
-            SFRtoSWR.plot_start_stage(None, os.path.join('versions', run))
+            SFRtoSWR.run(run_name=run, model_dir=model_dir)
+            SFRtoSWR.plot_start_stage(None, os.path.join('versions', run),model_dir= model_dir)
+
             basic.copy_mod_files(run)
         except Exception as e:
+            warnings.warn(f"failed bc of\n{e}")
+            print(traceback.format_exc())
             basic.write_run_name_to_file(run, 'failed set up p2.  ' + e, mode='a')
 
     if post_process_only:
@@ -173,14 +206,19 @@ def par_run(run,  numdays = 365,
             Hydrographs.run(run_name=run, reload = True, ml = m)
             postprocess.run(run, riv_only = True, m= m)
             Streamflows.run(out_folder=os.path.join('versions', run), ml=m)
-            post_process_heads.run(run_name=run, head_frequency=10, add_basemap=False, m = m)
-            # zone_bud.run(run, ml = m)
+            post_process_heads.run(run_name=run, head_frequency=10, ml = m, add_basemap=True)
 
-            p = os.path.join('initial_heads', run)
-            initial_conditions.set_starting_heads(m, plot = False, alt_outpath=p)
+            if do_zone_bud:
+                zone_bud.run(run, ml = m)
+
+            if set_starting_heads_after:
+                p = os.path.join('initial_heads', run)
+                initial_conditions.set_starting_heads(m, plot = False, alt_outpath=p)
             basic.write_run_name_to_file(run, 'completed post processing', mode='a')
 
         except Exception as e:
+            warnings.warn(f"failed bc of\n{e}")
+            print(traceback.format_exc())
             basic.write_run_name_to_file(run, str(e), mode='a')
 
     else:
@@ -191,6 +229,7 @@ def par_run(run,  numdays = 365,
     plt.close('all')
     plt.clf()
 
+    print(f"Done with Run: {run}")
 
 if __name__ =='__main__':
 

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import os
 import warnings
 
-def run(name, m = None, numdays = None, datestart = None):
+def run(name, m = None, numdays = None, datestart = None, write_output = True):
     '''
     create new mf wel file
     :param name:
@@ -46,9 +46,10 @@ def run(name, m = None, numdays = None, datestart = None):
     
     ts_data = get_well_info(wells, df)
 
-    wel = mf_wel(m, ts_data)
+    if write_output:
+        wel = mf_wel(m, ts_data)
 
-    wel.write_file()
+        wel.write_file()
 
     plot_pumping(df, out_folder)
 
@@ -59,7 +60,7 @@ def load_wells():
     wells = gpd.read_file('GIS/wells.shp')
     wells.loc[wells.loc[:,'flux']==0,'flux'] = -1 # some wells have no flow info, so setting to 1.
     
-    smf = wells.groupby('wellname').sum().loc[:,'flux'].rename('sumflux')
+    smf = wells.drop(columns = 'geometry').groupby('wellname').sum().loc[:,'flux'].rename('sumflux')
     wells = pd.merge(wells, smf, on = 'wellname')
 
     wells.loc[:,'frac'] = wells.loc[:,'flux']/wells.loc[:,'sumflux']

@@ -17,7 +17,9 @@ from scipy.spatial.distance import pdist, squareform
 
 import warnings
 
-def run(run_name):
+def run(run_name, model_dir = 'RR_2022'):
+
+
     info, swr_info, sfr_info, riv_keys_info = basic.load_params(run_name)
 
     datestart = info['start_date']
@@ -29,6 +31,9 @@ def run(run_name):
     print(out_folder)
     print('done with map')
 
+    geo_keys = {'dataset11a_with_geo': dict(LEAKANCE=swr_info['LEAKANCE']),
+              'dataset11a_with_geo_2015':dict(LEAKANCE=swr_info['SWR2015']),
+               'dataset11a_with_geo_2016':dict(LEAKANCE=swr_info['swrk2016'])}
 
     sfr = gpd.read_file('GIS/nhd_hr_demo_sfr_cells.shp')
     sfr = sfr.query("name=='Russian River'")
@@ -112,13 +117,13 @@ def run(run_name):
         return sfr, reach_loc, rout
 
     def write_reach_connect(rout):
-        with open('RR_2022/inputs/rout.txt','w') as r:
+        with open(os.path.join(model_dir,'inputs','rout.txt'),'w') as r:
             for key, value in rout.items():
                 v = '    '.join([str(v) for v in value])
                 r.write(f"{key}   {v}\n")
 
     def write_reach_loc_dat(sfr_filt):
-        sfr_filt.to_csv('RR_2022/inputs/reach_loc.txt', sep = ' ', index = False, header = False)
+        sfr_filt.to_csv(os.path.join(model_dir,'inputs','reach_loc.txt'), sep = ' ', index = False, header = False)
 
     def write_stress_period(sfr_filt):
         '''
@@ -129,25 +134,27 @@ def run(run_name):
         '''
 
         n = sfr_filt.shape[0]
-        with open("RR_2022/inputs/stress_period_data.txt",'w') as sp:
+        with open(os.path.join(model_dir,'inputs','stress_period_data.txt'),'w') as sp:
             sp.write("# DATASET 5 - STRESS PERIOD\n")
             sp.write( "# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG [IRDAUX]\n")
             sp.write(f"     1     {n}    0     0       1     {n}      1     {n}      1      # 5")
 
     def write_dataset_6(sfr_filt):
-            with open('RR_2022/inputs/dataset6.txt','w') as r:
+            with open(os.path.join(model_dir,'inputs','dataset6.txt'),'w') as r:
                 for i in sfr_filt.loc[:,'rno']:
                     r.write(f"{i}  1\n")
 
     def write_dataset_evap(sfr_filt,evap =0.000):
         sfr_filt.loc[:,'evap'] = evap
         # sfr_filt.loc[:,['rno','evap']]
-        sfr_filt.loc[:,['rno','evap']].rename(columns = {'rno':'#rno'}).to_csv('RR_2022/inputs/evap.tab', sep = ' ', index = False)
+        sfr_filt.loc[:,['rno','evap']].rename(columns = {'rno':'#rno'}).to_csv(
+            os.path.join(model_dir,'inputs','evap.tab'), sep = ' ', index = False)
 
     def write_dataset_rain(sfr_filt,rain =0.000):
         sfr_filt.loc[:,'rain'] = rain
         # sfr_filt.loc[:,['rno','evap']]
-        sfr_filt.loc[:,['rno','rain']].rename(columns = {'rno':'#rno'}).to_csv('RR_2022/inputs/rain.tab', sep = ' ', index = False)
+        sfr_filt.loc[:,['rno','rain']].rename(columns = {'rno':'#rno'}).to_csv(
+        os.path.join(model_dir, 'inputs', 'rain.tab'), sep = ' ', index = False)
 
     def write_dataset_10(sfr_filt, shift = 0):
         # DATASET 10 - GEOMETRY ASSIGNMENT DATA
@@ -155,8 +162,9 @@ def run(run_name):
         sfr_filt.loc[:,'IGEONUMR'] = sfr_filt.loc[:,'rno']
         sfr_filt.loc[:,'GZSHIFT'] = shift
         #IGMODRCH IGEONUMR GZSHIFT
-        sfr_filt.loc[:,['IGMODRCH','IGEONUMR','GZSHIFT' ]].rename(columns = {"IGMODRCH":"#IGMODRCH"}).to_csv('RR_2022/inputs/dataset_10.txt', sep = ' ', index = False)
-
+        sfr_filt.loc[:,['IGMODRCH','IGEONUMR','GZSHIFT' ]].rename(columns = {"IGMODRCH":"#IGMODRCH"}).to_csv(
+            # 'RR_2022/inputs/dataset_10.txt', sep = ' ', index = False)
+        os.path.join(model_dir, 'inputs', 'dataset_10.txt'), sep = ' ', index = False)
 
 
     def write_dataset_14a(sfr_filt, m, shift = 5):
@@ -164,8 +172,8 @@ def run(run_name):
         sfr_filt.loc[:,'top'] = bot[sfr_filt.loc[:,'i'], sfr_filt.loc[:,'j']] + shift
 
         # print(sfr_filt.loc[:,'top'])
-        sfr_filt.loc[:,['rno', 'top']].to_csv('RR_2022/inputs/dataset_14a.txt', sep = ' ', index = False)
-
+        sfr_filt.loc[:,['rno', 'top']].to_csv(
+        os.path.join(model_dir, 'inputs', 'dataset_14a.txt'), sep = ' ', index = False)
 
     def plot_swr(sfr_filt):
         fig,ax = plt.subplots()
@@ -340,52 +348,70 @@ def run(run_name):
                                    GMANNING = 0.025,
                                    LEAKANCE = .000001,
                                    getextd = 0.25,
-                                   extra = 0.25):
+                                   extra = 0.25,
+                                   geo_keys = None):
         '''
-        write geo section with actual cross section data
 
+        write geo section with actual cross section data using the geo_keys to write multiple for different eyars
+
+        :param sfr_filt:
+        :param min_elev:
+        :param IGEOTYPE:
+        :param IGCNDOP:
+        :param GMANNING:
+        :param LEAKANCE:
+        :param getextd:
+        :param extra:
+        :param geo_keys: geokeys = {{'dataset11a_with_geo': dict(LEAKANCE = .001)}}
+        :return:
         '''
+
         # IGCNDOP = 0, Fixed conductance is specified for the geometry entry.
         # DATASET 11A - GEOMETRY DATA
     # IGEONUM IGEOTYPE IGCNDOP GMANNING NGEOPTS GWIDTH GBELEV GSSLOPE    GCND      GLK GCNDLN GETEXTD
     #      1    5         1      .25                                     9.2E-04                   0.25
+        if geo_keys is None:
+            geo_keys = {{'dataset11a_with_geo': dict(LEAKANCE = LEAKANCE)}}
 
-        if min_elev is None:
-            print('using observed thalwegs, then smoothing')
-            min_elev ={}
-            for xxx in sfr_filt.loc[:,['rno','NGEOPTS', 'xsect']].values:
-                IGEONUM = xxx[0]
-                NGEOPTS = xxx[1]
-                xs = xxx[2]
-                cur = dfall.query(f"xsect=='{xs}'")
-                cur = cur.loc[:,['dist','z']]
-                min_elev[IGEONUM] = cur.loc[:,'z'].min()
+        for filename in geo_keys.keys():
+            __leakage = geo_keys[filename]['LEAKANCE']
 
-            min_elev = pd.DataFrame.from_dict(min_elev,orient='index',columns = ['THALWEG'])
-            min_elev.index = min_elev.index.set_names('reach')
+            if min_elev is None:
+                print('using observed thalwegs, then smoothing')
+                min_elev ={}
+                for xxx in sfr_filt.loc[:,['rno','NGEOPTS', 'xsect']].values:
+                    IGEONUM = xxx[0]
+                    NGEOPTS = xxx[1]
+                    xs = xxx[2]
+                    cur = dfall.query(f"xsect=='{xs}'")
+                    cur = cur.loc[:,['dist','z']]
+                    min_elev[IGEONUM] = cur.loc[:,'z'].min()
 
-            mv = smooth_thalweg(min_elev)
-            min_elev = min_elev.join(mv)
-            # min_elev.loc[:,'THALWEG_Smoothed'] = min_elev.ewm(span = 20).mean()
+                min_elev = pd.DataFrame.from_dict(min_elev,orient='index',columns = ['THALWEG'])
+                min_elev.index = min_elev.index.set_names('reach')
 
-        with open('RR_2022/inputs/dataset11a_with_geo.txt','w') as r:
-            r.write("# DATASET 11A - GEOMETRY DATA\n")
-            r.write("# IGEONUM IGEOTYPE IGCNDOP GMANNING NGEOPTS GWIDTH GBELEV GSSLOPE    LEAKANCE      GLK GCNDLN GETEXTD\n")
+                mv = smooth_thalweg(min_elev)
+                min_elev = min_elev.join(mv)
+                # min_elev.loc[:,'THALWEG_Smoothed'] = min_elev.ewm(span = 20).mean()
 
-        with open('RR_2022/inputs/dataset11a_with_geo.txt','a', newline = '') as r:
-            for xxx in sfr_filt.loc[:,['rno','NGEOPTS', 'xsect']].values:
-                IGEONUM = xxx[0]
-                NGEOPTS = xxx[1]
-                xs = xxx[2]
-                r.write(f"    {IGEONUM}\t{IGEOTYPE}\t{IGCNDOP}\t{GMANNING}\t{NGEOPTS}\t{LEAKANCE} \n")
+            with open(os.path.join(model_dir, 'inputs',filename+'.txt'),'w') as r:
+                r.write("# DATASET 11A - GEOMETRY DATA\n")
+                r.write("# IGEONUM IGEOTYPE IGCNDOP GMANNING NGEOPTS GWIDTH GBELEV GSSLOPE    LEAKANCE      GLK GCNDLN GETEXTD\n")
+
+            with open(os.path.join(model_dir, 'inputs',filename+'.txt'),'a', newline = '') as r:
+                for xxx in sfr_filt.loc[:,['rno','NGEOPTS', 'xsect']].values:
+                    IGEONUM = xxx[0]
+                    NGEOPTS = xxx[1]
+                    xs = xxx[2]
+                    r.write(f"    {IGEONUM}\t{IGEOTYPE}\t{IGCNDOP}\t{GMANNING}\t{NGEOPTS}\t{__leakage} \n")
 
 
-                cur = dfall.query(f"xsect=='{xs}'")
-                cur = cur.loc[:,['dist','z']]
-                minz = cur.loc[:,'z'].min() - min_elev.at[IGEONUM, 'THALWEG_Smoothed']
-                cur.loc[:,'z'] = cur.loc[:,'z'] -minz
+                    cur = dfall.query(f"xsect=='{xs}'")
+                    cur = cur.loc[:,['dist','z']]
+                    minz = cur.loc[:,'z'].min() - min_elev.at[IGEONUM, 'THALWEG_Smoothed']
+                    cur.loc[:,'z'] = cur.loc[:,'z'] -minz
 
-                cur.to_csv(r, sep = '\t',header = False, index = False)
+                    cur.to_csv(r, sep = '\t',header = False, index = False)
 
 
         if sfr_filt.filter(regex = 'THALWEG').columns is not None:
@@ -395,8 +421,8 @@ def run(run_name):
         sfr_filt = pd.merge(sfr_filt, min_elev, left_on = 'rno', right_index = True )
         sfr_filt = gpd.GeoDataFrame(sfr_filt, geometry = 'geometry', crs = 2226)
 
-        min_elev.to_csv('RR_2022/inputs/stream_thalwegs.txt')
-        min_elev.plot()
+        min_elev.to_csv(os.path.join(model_dir,'inputs','stream_thalwegs.txt'))
+        # min_elev.plot()
         # with open('RR_2022/inputs/stream_thalwegs.txt','w') as mint:
         #     mint.write('reach,THALWEG\n')
         #     [mint.write("{}, {}\n".format(item[0], item[1])) for item in min_elev.items()]
@@ -413,6 +439,7 @@ def run(run_name):
                                GMANNING =GMANNING,
                                LEAKANCE = LEAKANCE,
                                getextd = getextd,
+                                geo_keys=geo_keys
                                )
 
 
@@ -509,11 +536,11 @@ def run(run_name):
 
     print("\n\n\nDone!\n\n\n")
 
-def plot_start_stage(endh, out_folder):
+def plot_start_stage(endh, out_folder, model_dir = "RR_2022"):
 
     if endh is None:
         print('not setting new starting stages from old run.')
-        endh = pd.read_csv('RR_2022/inputs/start_stage.tab', sep = ',', header=None)
+        endh = pd.read_csv(os.path.join(model_dir, 'inputs','start_stage.tab'), sep = ',', header=None)
         endh.columns = ['reach','endheads']
         # print(endh.head())
 
@@ -522,7 +549,7 @@ def plot_start_stage(endh, out_folder):
     ax.set_ylabel('feet, elevation')
     plt.savefig(os.path.join(out_folder, 'start_stage.png'))
 
-def write_start_stage(sfr_filt, m,  stage_shift_from_mod_top=.5, use_thalweg=True, kper=None):
+def write_start_stage(sfr_filt, m,  stage_shift_from_mod_top=.5, use_thalweg=True, kper=None, model_dir = "RR_2022"):
     '''
 
     uses ending heads of last model run to create new starting heads
@@ -560,16 +587,16 @@ def write_start_stage(sfr_filt, m,  stage_shift_from_mod_top=.5, use_thalweg=Tru
         print('using ending stage values from previous run')
         endh.insert(0, 'reach', value=np.arange(endh.shape[0]) + 1)
         # display(endh.head())
-        endh.rename(columns={'reach': '#rno'}).to_csv('RR_2022/inputs/start_stage.tab',
+        endh.rename(columns={'reach': '#rno'}).to_csv(os.path.join(model_dir, 'inputs','start_stage.tab'),
                                                       sep=',', index=False, header=False)
         return endh
     else:
         print('using stream thalwegs')
-        df = pd.read_csv(os.path.join('RR_2022/inputs/stream_thalwegs.txt'))
+        df = pd.read_csv(os.path.join(model_dir, 'inputs','stream_thalwegs.txt'))
         df.loc[:, 'thalwegs'] = df.loc[:, 'thalweg'] + stage_shift_from_mod_top
         print(f'using thalweg + {stage_shift_from_mod_top:.2f}ft for each reach starting stage')
 
-        df.loc[:, ['reach', 'thalweg']].rename(columns={'reach': '#rno'}).to_csv('RR_2022/inputs/start_stage.tab',
+        df.loc[:, ['reach', 'thalweg']].rename(columns={'reach': '#rno'}).to_csv(os.path.join(model_dir, 'inputs','start_stage.tab'),
                                                                                  header=False, sep=',', index=False)
 
         return df.loc[:, ['reach', 'thalweg']].rename(columns={'reach': '#rno'})

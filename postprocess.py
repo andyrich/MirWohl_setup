@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # In[1]:
-
+import warnings
 
 import flopy
 import basic
@@ -15,7 +15,7 @@ import flopy.utils.mflistfile as mflist
 import pathlib
 
 
-def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = None, max_reach = 116):
+def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = None, max_reach = None):
     '''
 
     :param model_name:
@@ -29,6 +29,9 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = 
         m = basic.load_model(verbose = False)
 
     info, swr_info, sfr_info, riv_keys_info = basic.load_params(model_name)
+
+    if max_reach is None:
+        max_reach = swr_info['SWR_ncells']
 
     datestart = info['start_date']
 
@@ -49,6 +52,9 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = 
     for remove_ponds in r:
         ISWRPQAQ, ISWRPRGF, ISWRPSTG, ISWRPSTR, ISWRPQM = SWR(m, datestart,
                                                               remove_ponds = remove_ponds, max_reach = max_reach)
+
+        plot_sw_gw_exch(ISWRPQAQ,max_reach=max_reach,out_folder=out_folder)
+
         show_stats(ISWRPQAQ, out_folder, remove_ponds=remove_ponds)
 
         plot_stages(ISWRPQAQ, out_folder, remove_ponds = remove_ponds)
@@ -60,9 +66,9 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = 
         plot_inflow_outflows(ISWRPQM, out_folder, remove_ponds = remove_ponds)
 
         if not remove_ponds:
-            a,b = plot_ponds(m, datestart, out_folder, numdays=numdays, ISWRPQAQ = ISWRPQAQ)
+            a,b = plot_ponds(m, datestart, out_folder, numdays=numdays, ISWRPQAQ = None)
         if remove_ponds:
-            plot_rds_stage(m, datestart, out_folder, numdays=numdays, ISWRPQAQ = ISWRPQAQ, max_reach=max_reach)
+            plot_rds_stage(m, datestart, out_folder, numdays=numdays, ISWRPQAQ = None, max_reach=max_reach)
 
     show_structure(ISWRPSTR, out_folder)
 
@@ -103,6 +109,10 @@ def plot_rds_stage(m, datestart, out_folder, numdays = 365, ISWRPQAQ = None, max
     rds_phist = rds_phist.loc[:, 'River Diversion'].loc[:, 'River Level']
     rds_phist = rds_phist.replace({'N/D': np.nan}).astype(float)
     rds_phist.plot(ax = ax, c = 'g', label = 'RDS (manually observed)')
+
+    ISWRPQAQ.to_csv(os.path.join(out_folder, 'budget','stage_modeled.csv'))
+    stg.to_csv(os.path.join(out_folder, 'budget', 'stage_observed.csv'))
+    rds_phist.to_csv(os.path.join(out_folder, 'budget', 'stage_observed_manual.csv'))
 
     plt.savefig(os.path.join(out_folder, 'rds_stage.png'), dpi=250, bbox_inches='tight')
 
@@ -154,6 +164,37 @@ def plot_ponds(m, datestart, out_folder, numdays = 365, ISWRPQAQ = None):
 
     return ISWRPQAQ, wl
 
+def plot_sw_gw_exch(ISWRPQAQ, max_reach,out_folder ):
+    '''
+    plot sw gw exchhange for the SWR portion of the river
+    :param load_ISWRPQAQ:
+    :param max_reach:
+    :param out_folder:
+    :return: daily average aq_flow
+    '''
+
+
+    bins = np.arange(0, max_reach + 10, 10)
+    labels = [f"SWR_{x + 1}" for x in range(len(bins) - 1)]
+    labels[0] = labels[0] + ' (Upstream)'
+    labels[-1] = labels[-1] + ' (Downstream)'
+    df = ISWRPQAQ.copy()
+    #group stream cells into groups of 10 to simpllify plotting/analysis
+    df.loc[:, 'swr_group'] = pd.cut(df.index.get_level_values(5), bins, labels=labels)
+
+    aq_flow = df.set_index('swr_group', append=True).reset_index().groupby(['TOTIME', "swr_group"]).mean()
+    aq_flow.to_csv(os.path.join(out_folder, 'budget','swr_aq_flow_daily.csv'))
+    aq_flow = aq_flow.loc[:,['QAQFLOW']]
+    aq_flow = aq_flow.unstack().droplevel(0, 1).resample("1D").mean()
+
+    aq_flow.to_csv(os.path.join(out_folder, 'budget','sw_gw_exchange_swr.csv'))
+
+    aq_flow.plot()
+
+    plt.savefig(os.path.join(out_folder, 'sw_gw_exchange_swr.png'))
+
+    return aq_flow
+
 def isnumber(x):
     try:
         float(x)
@@ -199,9 +240,10 @@ def plot_error(datestart, m, out_folder):
     ax.set_title('Instantaneous Water Budget Error')
     plt.savefig(os.path.join(out_folder, 'bud_inst_err.png'),dpi = 250, bbox_inches = 'tight')
 
+    plt.figure()
     ax = df_in.loc[:,['SWR_LEAKAGE_IN']].join(df_out.loc[:,['SWR_LEAKAGE_OUT']]).plot()
 
-    ax = df_in.filter(regex = 'STORAGE').plot()
+    # ax = df_in.filter(regex = 'STORAGE').plot()
 
     plt.savefig(os.path.join(out_folder, 'bud_leakage.png'),dpi = 250, bbox_inches = 'tight')
 
@@ -222,6 +264,10 @@ def plot_error(datestart, m, out_folder):
     ax = df_filt.filter(regex='_OUT').plot(subplots=True, figsize=(10, 10), title='GW budget outflows')
     plt.savefig(os.path.join(out_folder, 'bud_gw_basic_outflows.png'), dpi=250, bbox_inches='tight')
 
+    df_in.to_csv(os.path.join(out_folder, 'budget', 'lst_budget_inflow.csv'))
+    df_out.to_csv(os.path.join(out_folder, 'budget', 'lst_budget_outflow.csv'))
+
+
     return df_in, df_out
 
 
@@ -236,6 +282,8 @@ def plot_swr_bud(m, datestart, out_folder):
                                                                                            figsize=(8, 8),
                                                                                            title='SWR Budget')
 
+    incremental.to_csv(os.path.join(out_folder, 'budget', 'swr_budget.csv'))
+
     plt.savefig(os.path.join(out_folder, 'bud_swr_basic.png'),dpi = 250, bbox_inches = 'tight')
 
 
@@ -245,6 +293,10 @@ def plot_sfr_bud(date_start, m,out_folder,  seg_filter = None, ):
     plist = os.path.join(m.model_ws,  'Results','sfr_output.cbc')
 
     if not os.path.exists(plist):
+        warnings.warn("The SFR output does not exist.")
+        return None, None
+    elif os.stat(plist).st_size<100:
+        warnings.warn("The SFR output is too small to contain any data. check oc file to update/re-run")
         return None, None
 
     sfrbud = flopy.utils.SfrFile(plist)
@@ -294,19 +346,19 @@ def check_len(file):
 
     return file_size>100.
 
-def SWR(m, start_date, max_reach = 116, remove_ponds = True  ):
-    path = os.path.join(m.model_ws, 'Results')
-
-
-    if check_len(os.path.join(path,'ISWRPQM.dat')):
-        ISWRPQM = pd.read_csv(os.path.join(path,'ISWRPQM.dat')).rename(columns = lambda x: x.strip())
-        print(ISWRPQM.columns)
-        ISWRPQM = filter_ponds(ISWRPQM, remove_ponds = remove_ponds, max_reach = max_reach)
+def load_ISWRPQM(path, remove_ponds, max_reach, start_date):
+    if check_len(os.path.join(path, 'ISWRPQM.dat')):
+        ISWRPQM = pd.read_csv(os.path.join(path, 'ISWRPQM.dat')).rename(columns=lambda x: x.strip())
+        # print(ISWRPQM.columns)
+        ISWRPQM = filter_ponds(ISWRPQM, remove_ponds=remove_ponds, max_reach=max_reach)
         ISWRPQM = set_time(ISWRPQM, start_date)
-        ISWRPQM = ISWRPQM.set_index(['TOTIME','SWRDT','KPER','KSTP','KSWR', 'RCHGRP'])
+        ISWRPQM = ISWRPQM.set_index(['TOTIME', 'SWRDT', 'KPER', 'KSTP', 'KSWR', 'RCHGRP'])
     else:
         ISWRPQM = None
 
+    return ISWRPQM
+
+def load_ISWRPQAQ(path, remove_ponds, max_reach, start_date):
     if check_len(os.path.join(path,'ISWRPQAQ.dat')):
         ISWRPQAQ = pd.read_csv(os.path.join(path,'ISWRPQAQ.dat'),header = None, skiprows  =1).drop([0])
         c = ['TOTIME','SWRDT','KPER','KSTP','KSWR','REACH','LAYER','GBELEV','STAGE','DEPTH','HEAD','WETPERM','CONDUCT','HEADDIFF','QAQFLOW','na']
@@ -318,6 +370,9 @@ def SWR(m, start_date, max_reach = 116, remove_ponds = True  ):
     else:
         ISWRPQAQ = None
 
+    return ISWRPQAQ
+
+def load_ISWRPRGF(path, remove_ponds, max_reach, start_date):
     if check_len(os.path.join(path,'ISWRPRGF.dat')):
         ISWRPRGF = pd.read_csv(os.path.join(path,'ISWRPRGF.dat'),index_col =False).rename(columns = lambda x: x.strip())
         ISWRPRGF = set_time(ISWRPRGF, start_date)
@@ -327,6 +382,9 @@ def SWR(m, start_date, max_reach = 116, remove_ponds = True  ):
     else:
         ISWRPRGF = None
 
+    return ISWRPRGF
+
+def load_ISWRPSTG(path, remove_ponds, max_reach, start_date):
     if check_len(os.path.join(path,'ISWRPSTG.dat')):
         ISWRPSTG = pd.read_csv(os.path.join(path,'ISWRPSTG.dat')).rename(columns = lambda x: x.strip())
         ISWRPSTG = ISWRPSTG.dropna(axis=1, how='all')
@@ -344,6 +402,9 @@ def SWR(m, start_date, max_reach = 116, remove_ponds = True  ):
     else:
         ISWRPSTG = None
 
+    return ISWRPSTG
+
+def load_ISWRPSTR(path, remove_ponds, max_reach, start_date):
     if check_len(os.path.join(path,'ISWRPSTR.dat')):
         ISWRPSTR = pd.read_csv(os.path.join(path,'ISWRPSTR.dat')).rename(columns = lambda x: x.strip())
         ISWRPSTR = set_time(ISWRPSTR, start_date)
@@ -351,6 +412,24 @@ def SWR(m, start_date, max_reach = 116, remove_ponds = True  ):
         ISWRPSTR = ISWRPSTR.set_index(['TOTIME','SWRDT','KPER','KSTP','KSWR', 'REACH'])
     else:
         ISWRPSTR = None
+
+    return ISWRPSTR
+
+def SWR(m, start_date, max_reach = 76, remove_ponds = True  ):
+    '''
+    load outputs from SWR
+    :param m:
+    :param start_date:
+    :param max_reach:
+    :param remove_ponds:
+    :return:
+    '''
+    path = os.path.join(m.model_ws, 'Results')
+    ISWRPQAQ = load_ISWRPQAQ(path, remove_ponds, max_reach, start_date)
+    ISWRPRGF = load_ISWRPRGF(path, remove_ponds, max_reach, start_date)
+    ISWRPSTG = load_ISWRPSTG(path, remove_ponds, max_reach, start_date)
+    ISWRPSTR = load_ISWRPSTR(path, remove_ponds, max_reach, start_date)
+    ISWRPQM = load_ISWRPQM(path, remove_ponds, max_reach, start_date)
 
     return ISWRPQAQ , ISWRPRGF, ISWRPSTG, ISWRPSTR, ISWRPQM
 

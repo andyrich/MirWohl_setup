@@ -59,6 +59,9 @@ def setup_folder(run_name):
     if not os.path.exists(os.path.join('versions', run_name, 'model_files')):
         os.mkdir(os.path.join('versions', run_name, 'model_files'))
 
+    if not os.path.exists(os.path.join('versions', run_name, 'budget')):
+        os.mkdir(os.path.join('versions', run_name, 'budget'))
+
     import shutil
     def replace(src, dst):
         shutil.copyfile(src, dst)
@@ -208,7 +211,7 @@ def load_model(verbose = False, path = None, nam = 'RRMF.nam', check = False, fo
                                     verbose = verbose,
                                     forgive=forgive,
                                     version = 'mfnwt', 
-                                    exe_name = f"{path}/MODFLOW-NWT_64",
+                                    exe_name = f"{path}/MODFLOW-NWT_64.exe",
                                     check = check)
     
     
@@ -264,13 +267,15 @@ def basic_map(m = None, add_basemap = False, fig = None, ax = None, maptype = 'c
     mod = gpd.read_file('GIS/model_boundary.shp')
     model_boundary_5070 = mod.to_crs(epsg=2226)
     
-    if fig is None and ax is None:
-        fig = plt.figure(figsize = (6,10), dpi = 250)
+    if fig is None:
+        fig = plt.figure(figsize=(6, 10), dpi=250)
+    if ax is None:
         mm = mp.make_map('Mirabel-Wohler Model Area')
         ax = mm.plotloc(fig, shape = model_boundary_5070, maptype = maptype )
 
     if m is None:
         m = load_model()
+
     f = flopy.plot.PlotMapView(m, ax =  ax)
 
     f.plot_ibound(color_noflow = 'black', alpha = .1)
@@ -677,3 +682,89 @@ def add_subindex_fields(file, h1, fields):
 
         print('Done adding fields to subindex.')
 
+
+def load_background(run, m, ):
+    '''
+    load pumping, streamflow and dam elevation for plotting purposes
+
+    :param run:
+    :param m:
+    :return:
+    '''
+    import make_wells
+    import write_inflows
+
+    pump = make_wells.run(name=run, m=m, numdays=None, datestart=None, write_output=False)
+    pump = pump.droplevel(1, 0)
+
+    sim_stage = pd.read_csv(os.path.join('versions', run, 'budget', 'stage_modeled.csv'))
+    sim_stage = sim_stage.set_index('TOTIME')
+    sim_stage.index = pd.to_datetime(sim_stage.index)
+    sim_stage = sim_stage.resample("1D").mean()
+    sim_stage.loc[:, "Reach 76, simulated"] = sim_stage.loc[:, "Reach 76, simulated"].interpolate()
+    sim_stage = sim_stage.rename(columns={"Reach 76, simulated": 'Dam Elevation'})
+    sim_stage.head()
+
+    rr, dry, mw, total, stg = write_inflows.run(run, m=m, write_output=False)
+    total = total.rename(columns={"rrtotal": 'Russian River'})
+
+    return pump, sim_stage, rr, dry, mw, total, stg
+
+
+def plot_bound(axisin, pump, sim_stage, total):
+    '''
+    make plot on axes using the output form the load_background
+    :param axisin:
+    :param pump:
+    :param sim_stage:
+    :param total:
+    :return:
+    '''
+    from matplotlib.ticker import FormatStrFormatter
+
+    sim_stage.plot.area(ax = axisin,color = 'grey',legend =False)
+    axisin.plot(sim_stage.index, sim_stage.loc[:,'Dam Elevation'], c = 'blue', label = None)
+
+    ax3 = axisin.twinx()
+    ax3.set_ylabel('Russian River Discharge')
+    total.plot.area(ax=ax3, color='green', alpha=.5)
+    ax3.plot(total.index, total.loc[:,'Russian River'], c = 'k', label = None)
+    ax3.set_yscale('log')
+    ax3.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+    ax3.set_ylim([None, ax3.get_ylim()[1] * 10])
+
+    ax2 = axisin.twinx()
+    rspine = ax2.spines['right']
+    rspine.set_position(('axes', 1.15))
+    ax2.set_frame_on(True)
+    ax2.patch.set_visible(False)
+    ax2.set_ylabel('Pumpage AF')
+    pump.resample("1W").sum().div(43560.).rename(columns=lambda x: x.replace("well", "Caisson ")).plot(ax=ax2,
+                                                                                                       stacked=True,
+                                                                                                       legend=False)
+
+    ax2.set_ylim([0, None])
+
+    axisin.set_ylim([20, 150])
+    axisin.set_yticks([20, 30, 40])
+    axisin.grid(True)
+
+    h1, l1 = axisin.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    h3, l3 = ax3.get_legend_handles_labels()
+
+    h1.extend(h2)
+    h1.extend(h3)
+    l1.extend(l2)
+    l1.extend(l3)
+
+    ax3.legend(h1, l1, bbox_to_anchor=(1.3, 0.), loc='lower left')
+
+def write_model_output_control(ml, num_days,step = 4):
+    head = 'HEAD PRINT FORMAT   0\n\
+HEAD SAVE UNIT   336\n\
+DRAWDOWN PRINT FORMAT   0\n\n'
+    with open(os.path.join(ml.model_ws, 'RR.oc'), 'w') as oc:
+        oc.write(head)
+        for sp in np.arange(1, num_days+1):
+            oc.write("period {:}  step {:}  \nPRINT BUDGET\nSAVE HEAD\n".format(sp, step))

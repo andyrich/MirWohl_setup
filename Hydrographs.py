@@ -21,6 +21,7 @@ from flopy.utils import ZoneBudget
 import conda_scripts.plot_help as ph
 import re
 
+
 def run(run_name, reload=False, ml=None, plot_well_locs = True, plot_hydros = True, skip_fancy = False, add_temp = True ):
     '''
 
@@ -68,11 +69,18 @@ def plot_residual(allobs, out_folder, ml):
     :return:
     '''
 
+    #check the number of obs:
+    if allobs.Observed.isnull().all() or allobs.Simulated.isnull().all():
+        warnings.warn(f"\nIn the Summary waterlevel df in plot_hydrographs:\mAll observed values are null {allobs.Observed.isnull().all() }\n\
+All Simulated values are null {allobs.Simulated.isnull().all() }\n")
+        return None, None
+
     locs = allobs.drop_duplicates('well').loc[:, ['geometry', 'well']]
 
     allobs.loc[:, 'residual'] = allobs.loc[:, 'Observed'] - allobs.loc[:, 'Simulated']
 
-    allobs = allobs.drop(columns='geometry').groupby('well').mean().reset_index()
+    print(allobs.head())
+    allobs = allobs.loc[:,['well',"residual"]].groupby('well').mean().reset_index()
 
     merged = pd.merge(allobs, locs, on='well')
     merged = gpd.GeoDataFrame(merged, geometry='geometry', crs=2226)
@@ -153,8 +161,8 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
                               f"index of observed\n{obs.index}\n" \
                               f"index of predvobs\n{predvobs.index}\n")
 
-            obsall = obsall.append(predvobs)
-
+            # obsall = obsall.append(predvobs)
+            obsall = pd.concat([obsall, predvobs])
 
         if skip_plotting:
             print('not plotting hydrographs')

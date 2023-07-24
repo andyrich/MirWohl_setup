@@ -184,7 +184,7 @@ def plot_water_table_and_sat_thickness(hds, swr_reaches, sfr_reaches, ml, wells,
                         crs=2226,
                         source=r"C:\GIS\basemap\SRP_hydro.tif")
 
-    wt = flopy.utils.postprocessing.get_water_table(hds, nodata=-999)
+    wt = flopy.utils.postprocessing.get_water_table(hds, masked_values=[-999])
     wt = np.ma.array(wt, mask=ml.bas6.ibound.array[0] == 0)
 
     mapview = flopy.plot.PlotMapView(ml, ax=axes[1])

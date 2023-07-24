@@ -144,6 +144,8 @@ def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109, clean 
 
     stg = pd.read_csv(p.joinpath(rds), parse_dates=[0]).set_index('StartDateTime')
 
+
+
     if clean:
         stg.loc[stg.loc[:, 'Value'] > 50, 'Value'] = 50.
         stg.loc[stg.loc[:, 'Value'] < 20, 'Value'] = 20.
@@ -172,6 +174,12 @@ def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109, clean 
 
     stg.loc[:, "Value"] = stg.loc[:, 'INTERP']
 
+    if len(stg.filter(regex = "Jun|Notes").columns)>0:
+        print(f'dropping columns: {stg.filter(regex = "Jun|Notes").columns}')
+        stg = stg.drop(columns = stg.filter(regex = "Jun|Notes").columns)
+
+    print(stg.head())
+    print(stg.dtypes)
     stg = stg.resample('1D').mean()
 
     end_days = pd.to_datetime(datestart) + pd.to_timedelta(numdays, unit="D")
