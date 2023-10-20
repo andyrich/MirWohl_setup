@@ -1,4 +1,858 @@
-{         "pest2014trans":{
+{ "RIVnoSWR_v4":{
+                    "name":"RIVnoSWR_v4",
+                    "start_date":"1/1/2014",
+                    "numdays":2853,
+                    "description":"write-math",
+                    "notes":"increasing SFR K from 1e-5 to 0.001 -- 1000ft/day/86400 x0.1 for river sed. 0.5x of original riv outputs. oints derived from pest 2014a. using RIV exported from Base_modelswrk_noInflowLimit_RedArea SWR package. model area is reduced to just above riverfront park. end of model chosen when previous model failed",
+                    "ovr_flux" : 0.0,
+
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                        "inflow_limit_cfs": 200000},
+                    "GHB":
+                        {"cond":0.001}
+                    }
+
+                    },
+    "RIVnoSWR_v3_norecharge":{
+                    "name":"RIVnoSWR_v3_norecharge",
+                    "start_date":"1/1/2014",
+                    "numdays":2853,
+                    "description":"write-math",
+                    "notes":"0.5x of original riv outputs. oints derived from pest 2014a. using RIV exported from Base_modelswrk_noInflowLimit_RedArea SWR package. model area is reduced to just above riverfront park. end of model chosen when previous model failed",
+                    "ovr_flux" : 0.0,
+
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                        "inflow_limit_cfs": 200000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+   "RIVnoSWR_v3":{
+                    "name":"RIVnoSWR_v3",
+                    "start_date":"1/1/2014",
+                    "numdays":2853,
+                    "description":"write-math",
+                    "notes":"0.5x of original riv outputs. oints derived from pest 2014a. using RIV exported from Base_modelswrk_noInflowLimit_RedArea SWR package. model area is reduced to just above riverfront park. end of model chosen when previous model failed",
+
+
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                        "inflow_limit_cfs": 200000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+   "RIVnoSWR_v3":{
+                    "name":"RIVnoSWR_v3",
+                    "start_date":"1/1/2014",
+                    "numdays":2853,
+                    "description":"write-math",
+                    "notes":"0.5x of original riv outputs. oints derived from pest 2014a. using RIV exported from Base_modelswrk_noInflowLimit_RedArea SWR package. model area is reduced to just above riverfront park. end of model chosen when previous model failed",
+
+
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                        "inflow_limit_cfs": 200000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+    "RIVnoSWR_v2":{
+                    "name":"RIVnoSWR_v2",
+                    "start_date":"1/1/2014",
+                    "numdays":2853,
+                    "description":"write-math",
+                    "notes":"0.1x of original riv outputs. oints derived from pest 2014a. using RIV exported from Base_modelswrk_noInflowLimit_RedArea SWR package. model area is reduced to just above riverfront park. end of model chosen when previous model failed",
+
+
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                        "inflow_limit_cfs": 200000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+     "RIVnoSWR_v1":{
+                    "name":"RIVnoSWR_v1",
+                    "start_date":"1/1/2014",
+                    "numdays":2853,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. using RIV exported from Base_modelswrk_noInflowLimit_RedArea SWR package. model area is reduced to just above riverfront park. end of model chosen when previous model failed",
+
+
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                        "inflow_limit_cfs": 200000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+     "Base_modelswrk_noInflowLimit_RedArea":{
+                    "name":"Base_modelswrk_noInflowLimit_RedArea",
+                    "start_date":"1/1/2014",
+                    "numdays":3286,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values. model area is reduced to just above riverfront park",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                        "inflow_limit_cfs": 200000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+     "Base_modelswrk_noInflowLimit":{
+                    "name":"Base_modelswrk_noInflowLimit",
+                    "start_date":"1/1/2014",
+                    "numdays":3286,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                        "inflow_limit_cfs": 200000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+
+   "Base_model_long_10042023_constant_swrk_overlandFlowFilledPools":{
+                    "name":"Base_model_long_10042023_constant_swrk_overlandFlowFilledPools",
+                    "start_date":"1/1/2014",
+                    "numdays":3286,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                        "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+     "Base_model_long_07142023_constant_swrk_new_heads":{
+                    "name":"Base_model_long_07142023_constant_swrk_new_heads",
+                    "start_date":"1/1/2014",
+                    "numdays":3286,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+
+   "SWR_long_2lays_med_SWRK":{
+                    "name":"SWR_long_2lays_med_SWRK",
+                    "start_date":"1/1/2014",
+                    "numdays":3286,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  1.42053225e-06,
+                        "SWR2015": 1.42053225e-06,
+                      "swrk2016": 1.42053225e-06,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+
+
+  "SWR_long_2lays_low_SWRK":{
+                    "name":"SWR_long_2lays_low_SWRK",
+                    "start_date":"1/1/2014",
+                    "numdays":3286,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-007,
+                        "SWR2015": 2.841064500000000e-007,
+                      "swrk2016": 2.841064500000000e-007,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+
+    "Base_model_long_07142023_constant_swrk":{
+                    "name":"Base_model_long_07142023_constant_swrk",
+                    "start_date":"1/1/2014",
+                    "numdays":3286,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+  "SWR_short_2lays_med_SWRK":{
+                    "name":"SWR_short_2lays_med_SWRK",
+                    "start_date":"1/1/2014",
+                    "numdays":1095,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  1.42053225e-06,
+                        "SWR2015": 1.42053225e-06,
+                      "swrk2016": 1.42053225e-06,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+
+
+  "SWR_short_2lays_low_SWRK":{
+                    "name":"SWR_short_2lays_low_SWRK",
+                    "start_date":"1/1/2014",
+                    "numdays":1095,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-007,
+                        "SWR2015": 2.841064500000000e-007,
+                      "swrk2016": 2.841064500000000e-007,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+
+    "Base_model_07142023_constant_swrk":{
+                    "name":"Base_model_07142023_constant_swrk",
+                    "start_date":"1/1/2014",
+                    "numdays":1095,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 2.841064500000000e-006,
+                      "swrk2016": 2.841064500000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+
+  "Base_model_07142023":{
+                    "name":"Base_model_07142023",
+                    "start_date":"1/1/2014",
+                    "numdays":1095,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 1.049025800000000e-005,
+                      "swrk2016": 3.501332000000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+  "SWR_short_3lays":{
+                    "name":"SWR_short_3lays",
+                    "start_date":"1/1/2014",
+                    "numdays":1095,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 1.049025800000000e-005,
+                      "swrk2016": 3.501332000000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+  "SWR_short":{
+                    "name":"SWR_short",
+                    "start_date":"1/1/2014",
+                    "numdays":1095,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 1.049025800000000e-005,
+                      "swrk2016": 3.501332000000000e-006,
+                      "SWR_ncells": 76,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":635,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+  "ibound_update":{
+                    "name":"ibound_update",
+                    "start_date":"1/1/2014",
+                    "numdays":1095,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 1.049025800000000e-005,
+                      "swrk2016": 3.501332000000000e-006,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+  "sfr_width_test":{
+                    "name":"sfr_width_test",
+                    "start_date":"1/1/2014",
+                    "numdays":1095,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 1.049025800000000e-005,
+                      "swrk2016": 3.501332000000000e-006,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+  "pilot_points1":{
+                    "name":"pilot_points1",
+                    "start_date":"1/1/2014",
+                    "numdays":1095,
+                    "description":"write-math",
+                    "notes":"pilot points derived from pest 2014a. transient swr streambed k values",
+
+                "parameters":{
+                    "SWR":{
+                        "IGEOTYPE" : 3,
+                        "IGCNDOP" : 1,
+                        "GMANNING" : 0.035,
+                        "LEAKANCE" :  2.841064500000000e-006,
+                        "SWR2015": 1.049025800000000e-005,
+                      "swrk2016": 3.501332000000000e-006,
+                        "evap":0,
+                        "rain":0,
+                        "getextd" : 0.25,
+                        "reach_main":578,
+                        "IROUTETYPE":3,
+                        "use_thalweg":false,
+                        "dam_swr_rno" : 765,
+                        "use_average_reach_len" : false,
+                        "set_start_stage":false,
+                        "kper" : "none",
+                        "SWR_processor": "write_dataset_11a_with_geo"},
+
+                    "SFR":
+                        {"info":"sfr",
+                        "hcond1":1.05e-06,
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
+                    "GHB":
+                        {"cond":0.01}
+                    }
+
+                    },
+  "pest2014trans":{
                     "name":"pest2014trans",
                     "start_date":"1/1/2014",
                     "numdays":1095,
@@ -28,7 +882,8 @@
                     "SFR":
                         {"info":"sfr",
                         "hcond1":1.05e-06,
-                        "strthick":10.0},
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
                     "GHB":
                         {"cond":0.01}
                     }
@@ -62,7 +917,8 @@
                     "SFR":
                         {"info":"sfr",
                         "hcond1":1.05e-06,
-                        "strthick":10.0},
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
                     "GHB":
                         {"cond":0.01}
                     }
@@ -96,7 +952,8 @@
                     "SFR":
                         {"info":"sfr",
                         "hcond1":1.05e-06,
-                        "strthick":10.0},
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
                     "GHB":
                         {"cond":0.01}
                     }
@@ -131,7 +988,8 @@
                     "SFR":
                         {"info":"sfr",
                         "hcond1":1.05e-06,
-                        "strthick":10.0},
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
 
                     "GHB":
                         {"cond":0.01}
@@ -168,7 +1026,8 @@
                     "SFR":
                         {"info":"sfr",
                         "hcond1":1.05e-06,
-                        "strthick":10.0},
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
                     "GHB":
                         {"cond":0.01}
                     }
@@ -203,7 +1062,8 @@
                     "SFR":
                         {"info":"sfr",
                         "hcond1":1.05e-06,
-                        "strthick":10.0},
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
                     "GHB":
                         {"cond":0.01}
                     }
@@ -240,7 +1100,8 @@
                     "SFR":
                         {"info":"sfr",
                         "hcond1":1.05e-06,
-                        "strthick":10.0},
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
                     "GHB":
                         {"cond":0.01}
                     }
@@ -275,7 +1136,8 @@
                     "SFR":
                         {"info":"sfr",
                         "hcond1":1.05e-06,
-                        "strthick":10.0},
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
                     "GHB":
                         {"cond":0.01}
                     }
@@ -309,7 +1171,8 @@
                     "SFR":
                         {"info":"sfr",
                         "hcond1":1.05e-06,
-                        "strthick":10.0},
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
                     "GHB":
                         {"cond":0.01}
                     }
@@ -344,7 +1207,8 @@
                     "SFR":
                         {"info":"sfr",
                         "hcond1":1.05e-06,
-                        "strthick":10.0},
+                        "strthick":10.0,
+                          "inflow_limit_cfs": 2000},
                     "GHB":
                         {"cond":0.01}
                     }

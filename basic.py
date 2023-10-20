@@ -50,11 +50,17 @@ def setup_folder(run_name):
     if not os.path.exists(os.path.join('versions', run_name, 'hydrographs')):
         os.mkdir(os.path.join('versions', run_name, 'hydrographs'))
 
+    if not os.path.exists(os.path.join('versions', run_name, 'streamflow')):
+        os.mkdir(os.path.join('versions', run_name, 'streamflow'))
+
     if not os.path.exists(os.path.join('versions', run_name, 'wl_maps')):
         os.mkdir(os.path.join('versions', run_name, 'wl_maps'))
 
     if not os.path.exists(os.path.join('versions', run_name, 'model_files')):
         os.mkdir(os.path.join('versions', run_name, 'model_files'))
+
+    if not os.path.exists(os.path.join('versions', run_name, 'budget')):
+        os.mkdir(os.path.join('versions', run_name, 'budget'))
 
     import shutil
     def replace(src, dst):
@@ -171,19 +177,41 @@ def out_folder(run_name = 'June2015'):
     
     return os.path.join('versions', info['name'])
 
-def load_model(verbose = False, path = None, nam = 'RRMF.nam', check = False, forgive = True):
+def load_model(verbose = False, path = None, nam = 'RRMF.nam', check = False, forgive = True,
+               load_fast = True):
+    '''
+
+    :param verbose:
+    :param path:
+    :param nam:
+    :param check:
+    :param forgive:
+    :param load_fast: if True will skip HOB as it takes long time to load.
+                    if list will load list. if False loads all
+    :return: ml
+    '''
     
     if path is None:
         path = 'RR_2022'
 
+    if load_fast is True :
+        load_only = ['DIS', 'BAS6', 'UPW', 'NWT', 'WEL', 'GHB', 'OC', 'SFR', 'RCH', 'GAGE']
+        print(f'loading {load_only}')
+    elif isinstance(load_fast, list):
+        load_only = load_fast
+        print(f'loading {load_only}')
+    else:
+        load_only = None
+        print(f'loading all packages...')
+
     print(path)
     ml = flopy.modflow.Modflow.load(nam,
-                                    # load_only= ['DIS', 'BAS6'],
+                                    load_only= load_only,
                                     model_ws = path,
                                     verbose = verbose,
                                     forgive=forgive,
                                     version = 'mfnwt', 
-                                    exe_name = f"{path}/MODFLOW-NWT_64",
+                                    exe_name = f"{path}/MODFLOW-NWT_64.exe",
                                     check = check)
     
     
@@ -239,13 +267,15 @@ def basic_map(m = None, add_basemap = False, fig = None, ax = None, maptype = 'c
     mod = gpd.read_file('GIS/model_boundary.shp')
     model_boundary_5070 = mod.to_crs(epsg=2226)
     
-    if fig is None and ax is None:
-        fig = plt.figure(figsize = (6,10), dpi = 250)
+    if fig is None:
+        fig = plt.figure(figsize=(6, 10), dpi=250)
+    if ax is None:
         mm = mp.make_map('Mirabel-Wohler Model Area')
         ax = mm.plotloc(fig, shape = model_boundary_5070, maptype = maptype )
 
     if m is None:
         m = load_model()
+
     f = flopy.plot.PlotMapView(m, ax =  ax)
 
     f.plot_ibound(color_noflow = 'black', alpha = .1)
@@ -346,9 +376,13 @@ def get_mg(xx,yy,mg):
     
     return f
 
-def get_heads(m):
+def get_heads(m, return_final = True):
     hdsobj = bf.HeadFile(os.path.join(m.model_ws, 'Results','RRbin.hds'))
-    hds = hdsobj.get_data(kstpkper=hdsobj.get_kstpkper()[-1])
+
+    if return_final:
+        hds = hdsobj.get_data(kstpkper=hdsobj.get_kstpkper()[-1])
+    else:
+        hds = None
     
     return hds, hdsobj
 
@@ -385,7 +419,113 @@ def plot_all_aquifer_props(ml, run_name):
     plt.savefig(fname, bbox_inches = 'tight')
 
     plt.close('all')
-    
+
+
+def load_pilot_point_calibrated_props(ml,ppfolder, load_best=True, load_raw_arrays = False):
+    '''
+    load arrays from pilot point output folder, taking into account value of pval file
+    :param ml:
+    :param ppfolder:
+    :param load_best:
+    :return:
+    '''
+    if load_best:
+        pv = pd.read_csv(os.path.join(ml.model_ws, ppfolder, 'pval.PVAL'), sep='\s+').rename(columns={'11': 'pval'})
+        pval = pv.rename(lambda x: x.lower()).pval.to_dict()
+    else:
+        pval = ml.mfpar.pval.pval_dict
+
+    if load_raw_arrays:
+        pval = {x: 1.0 for x in pval.keys()}
+
+    hk1 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'hk1.txt'))
+    hk2 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'hk2.txt'))
+    hk3 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'hk3.txt'))
+
+    hk1 = hk1 * pval['hk_1']
+    hk2 = hk2 * pval['hk_2']
+    hk3 = hk3 * pval['hk_3']
+
+    vk1 = hk1 * pval['vk_1']
+    vk2 = hk2 * pval['vk_2']
+    vk3 = hk3 * pval['vk_3']
+
+    ss1 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'ss1.txt'))
+    ss2 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'ss2.txt'))
+    ss3 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'ss3.txt'))
+    ss1 = ss1 * pval['ss_1']
+    ss2 = ss2 * pval['ss_2']
+    ss3 = ss3 * pval['ss_3']
+
+    sy1 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'sy1.txt')) * pval['sy_1']
+    sy2 = np.genfromtxt(os.path.join(ml.model_ws, ppfolder, 'sy2.txt')) * pval['sy_2']
+
+    return {'hk1': hk1, 'hk2': hk2, 'hk3': hk3,
+            'vk1': vk1, 'vk2': vk2, 'vk3': vk3,
+            'ss1': ss1, 'ss2': ss2, 'ss3': ss3,
+            'sy1': sy1, 'sy2': sy2, }, pval
+
+
+def plot_aquifer_props_pilot_points(ml, ppfolder, out_folder, load_best):
+    '''
+    plot pilot point aquifer properties
+    :param ml: model instance
+    :param ppfolder: name of pilot point folder in run
+    :param out_folder: where files will be written
+    :param load_best: load pval values (false) or load values from pilot point folder
+    :return:
+    '''
+
+    ppar, pval = load_pilot_point_calibrated_props(ml, ppfolder, load_best=load_best)
+
+    plot_aquifer_prop(ml, np.stack([ppar['hk1'], ppar['hk2'], ppar['hk3'], ]), vmax=.1)
+    plt.savefig(os.path.join(ml.model_ws, ppfolder, 'pp_hk.png'), dpi=250)
+    plt.savefig(os.path.join(out_folder, 'hk.png'), dpi=250)
+
+    plot_aquifer_prop(ml, np.stack([ppar['vk1'], ppar['vk2'], ppar['vk3'], ]), vmin=1e-7, vmax=.01,
+                            title='Vertical Conductivity')
+    plt.savefig(os.path.join(ml.model_ws, ppfolder, 'pp_vk.png'), dpi=250)
+    plt.savefig(os.path.join(out_folder, 'vk.png'), dpi=250)
+    plot_aquifer_prop(ml, np.stack([ppar['ss1'], ppar['ss2'], ppar['ss3'], ]), vmin=1e-6, vmax=0.01,
+                            title='Specific Storage')
+    plt.savefig(os.path.join(ml.model_ws, ppfolder, 'pp_ss.png'), dpi=250)
+    plt.savefig(os.path.join(out_folder, 'ss.png'), dpi=250)
+    plot_aquifer_prop(ml, np.stack([ppar['sy1'], ppar['sy2'], ppar['sy2'] * 0, ]), vmin=.01, vmax=.3,
+                            title='Specific Yield')
+    plt.savefig(os.path.join(ml.model_ws, ppfolder, 'pp_sy.png'),
+                dpi=250)  # basic.plot_aquifer_prop(ml, np.stack([ppar['hk1'], ar['hk1'], ar['hk1'], ]), vmax = .01)
+    plt.savefig(os.path.join(out_folder, 'sy.png'), dpi=250)
+
+
+def load_mod_props(ml):
+    pval = ml.mfpar.pval.pval_dict
+
+    hk1 = np.genfromtxt(os.path.join(ml.model_ws, 'hklay1_thck.txt'), delimiter=',')
+    hk2 = np.genfromtxt(os.path.join(ml.model_ws, 'hklay2_thck.txt'), delimiter=',')
+    hk3 = np.genfromtxt(os.path.join(ml.model_ws, 'hklay3_thck.txt'), delimiter=',')
+
+    hk1 = hk1 * pval['hk_1']
+    hk2 = hk2 * pval['hk_2']
+    hk3 = hk3 * pval['hk_3']
+
+    vk1 = hk1 * pval['vk_1']
+    vk2 = hk2 * pval['vk_2']
+    vk3 = hk3 * pval['vk_3']
+
+    ss1 = np.ones((ml.dis.nrow, ml.dis.ncol)) * pval['ss_1']
+    ss2 = np.ones((ml.dis.nrow, ml.dis.ncol)) * pval['ss_2']
+    ss3 = np.genfromtxt(os.path.join(ml.model_ws, 'sslay3_thck.txt'), delimiter=',')
+    ss3 = ss3 * pval['ss_3']
+
+    sy1 = np.ones((ml.dis.nrow, ml.dis.ncol)) * pval['sy_1']
+    sy2 = np.ones((ml.dis.nrow, ml.dis.ncol)) * pval['sy_2']
+
+    return {'hk1': hk1, 'hk2': hk2, 'hk3': hk3,
+            'vk1': vk1, 'vk2': vk2, 'vk3': vk3,
+            'ss1': ss1, 'ss2': ss2, 'ss3': ss3,
+            'sy1': sy1, 'sy2': sy2}
+
+
 def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
                       cmap =  'viridis', title = "Horizontal Conductivity"):
     plt.figure()
@@ -395,7 +535,9 @@ def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
 
     axupper = []
     axlower = []
-    for lay in range(3):
+    nlay = get_num_lays(ml)
+
+    for lay in range(nlay):
         ax = fig.add_subplot(gs[0, lay], projection = ccrs.epsg(2226))
 
         mapview = flopy.plot.PlotMapView(ml,ax = ax)
@@ -427,6 +569,16 @@ def plot_aquifer_prop(ml, array, vmin=0.0001, vmax=10.,
     fig.suptitle(title)
 
     return fig, axupper, axlower
+
+def get_num_lays(ml):
+    '''
+    get number of layers from ibound. because layer 3 basicall turned off via ibound only
+
+    :return integer
+    '''
+    nlays = sum([~np.alltrue(ml.bas6.ibound.array[lay] == 0) for lay in range(ml.nlay)])
+
+    return nlays
 
 def write_run_name_to_file(run, state = 'started', mode = 'w'):
     with open(os.path.join('versions', 'current_run.txt'), mode = mode) as wrt:
@@ -493,3 +645,126 @@ def set_dates_xtick(ax):
     formatter = mdates.ConciseDateFormatter(locator)
     ax.xaxis.set_major_locator(locator)
     ax.xaxis.set_major_formatter(formatter)
+
+
+def add_subindex_fields(file, h1, fields):
+    '''
+    add h1 section to subindex file if not present. then add fields
+    :param file: path to subindex file
+    :param h1: heading title. will search for this. if already present, will exit
+    :param fields: add pairs of href (filename path), and label.
+    :return:
+    '''
+
+    if os.path.exists(file):
+        print(f"file exists\n{file}\n")
+    else:
+        import warnings
+        warnings.warn(f"file does not exist. ending add_subindex_fields\n{file}\n")
+        return
+
+    with open(file, 'r') as myfile:
+        if h1 in myfile.read():
+            present = True
+            print(f"Not adding fields to subindex because {h1} already is listed")
+        else:
+            present = False
+
+    if not present:
+        with open(file, 'a') as myfile:
+            myfile.write('\n\n')
+            myfile.write("<h1>{:}</h1>\n".format(h1))
+
+            for k in fields:
+                fileref = fields[k]
+                part = """<a href="{:}">{:}<br></a>\n""".format(fileref, k)
+                myfile.write(part)
+
+        print('Done adding fields to subindex.')
+
+
+def load_background(run, m, ):
+    '''
+    load pumping, streamflow and dam elevation for plotting purposes
+
+    :param run:
+    :param m:
+    :return:
+    '''
+    import make_wells
+    import write_inflows
+
+    pump = make_wells.run(name=run, m=m, numdays=None, datestart=None, write_output=False)
+    pump = pump.droplevel(1, 0)
+
+    sim_stage = pd.read_csv(os.path.join('versions', run, 'budget', 'stage_modeled.csv'))
+    sim_stage = sim_stage.set_index('TOTIME')
+    sim_stage.index = pd.to_datetime(sim_stage.index)
+    sim_stage = sim_stage.resample("1D").mean()
+    sim_stage.loc[:, "Reach 76, simulated"] = sim_stage.loc[:, "Reach 76, simulated"].interpolate()
+    sim_stage = sim_stage.rename(columns={"Reach 76, simulated": 'Dam Elevation'})
+    sim_stage.head()
+
+    rr, dry, mw, total, stg = write_inflows.run(run, m=m, write_output=False)
+    total = total.rename(columns={"rrtotal": 'Russian River'})
+
+    return pump, sim_stage, rr, dry, mw, total, stg
+
+
+def plot_bound(axisin, pump, sim_stage, total):
+    '''
+    make plot on axes using the output form the load_background
+    :param axisin:
+    :param pump:
+    :param sim_stage:
+    :param total:
+    :return:
+    '''
+    from matplotlib.ticker import FormatStrFormatter
+
+    sim_stage.plot.area(ax = axisin,color = 'grey',legend =False)
+    axisin.plot(sim_stage.index, sim_stage.loc[:,'Dam Elevation'], c = 'blue', label = None)
+
+    ax3 = axisin.twinx()
+    ax3.set_ylabel('Russian River Discharge')
+    total.plot.area(ax=ax3, color='green', alpha=.5)
+    ax3.plot(total.index, total.loc[:,'Russian River'], c = 'k', label = None)
+    ax3.set_yscale('log')
+    ax3.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+    ax3.set_ylim([None, ax3.get_ylim()[1] * 10])
+
+    ax2 = axisin.twinx()
+    rspine = ax2.spines['right']
+    rspine.set_position(('axes', 1.15))
+    ax2.set_frame_on(True)
+    ax2.patch.set_visible(False)
+    ax2.set_ylabel('Pumpage AF')
+    pump.resample("1W").sum().div(43560.).rename(columns=lambda x: x.replace("well", "Caisson ")).plot(ax=ax2,
+                                                                                                       stacked=True,
+                                                                                                       legend=False)
+
+    ax2.set_ylim([0, None])
+
+    axisin.set_ylim([20, 150])
+    axisin.set_yticks([20, 30, 40])
+    axisin.grid(True)
+
+    h1, l1 = axisin.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    h3, l3 = ax3.get_legend_handles_labels()
+
+    h1.extend(h2)
+    h1.extend(h3)
+    l1.extend(l2)
+    l1.extend(l3)
+
+    ax3.legend(h1, l1, bbox_to_anchor=(1.3, 0.), loc='lower left')
+
+def write_model_output_control(ml, num_days,step = 4):
+    head = 'HEAD PRINT FORMAT   0\n\
+HEAD SAVE UNIT   336\n\
+DRAWDOWN PRINT FORMAT   0\n\n'
+    with open(os.path.join(ml.model_ws, 'RR.oc'), 'w') as oc:
+        oc.write(head)
+        for sp in np.arange(1, num_days+1):
+            oc.write("period {:}  step {:}  \nPRINT BUDGET\nSAVE HEAD\n".format(sp, step))

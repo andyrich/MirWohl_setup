@@ -24,9 +24,10 @@ def flo_dict():
     return flow
 
 def run(model_name, m = None, minvalue = 29.54,
-    max_value = 38,    numdays = None, datestart = None, cleandamdata = True, inflow_limit = 2000):
+    max_value = 38,    numdays = None, datestart = None, cleandamdata = True, inflow_limit = None, write_output = True):
     '''
     run processing of river inflows, dam stage
+    :param write_output:
     :param inflow_limit:
     :param model_name:
     :param m:
@@ -43,15 +44,21 @@ def run(model_name, m = None, minvalue = 29.54,
 
     info, swr_info, sfr_info, riv_keys_info = basic.load_params(model_name)
 
+    nswr_cells = swr_info['SWR_ncells']
     if datestart is None:
         datestart = info['start_date']
     else:
-        warnings.warn(f"Using supplied datestart ({datestart}), not that which is listed in the run_names.txt")
+        warnings.warn(f"Using supplied datestart ({datestart}), not that which is listed in the run_names.json")
 
     if numdays is None:
         numdays = info['numdays']
     else:
-        warnings.warn(f"Using supplied numdays ({numdays}), not that which is listed in the run_names.txt")
+        warnings.warn(f"Using supplied numdays ({numdays}), not that which is listed in the run_names.json")
+
+    if inflow_limit is None:
+        inflow_limit = sfr_info['inflow_limit_cfs']
+    else:
+        warnings.warn(f"Using supplied inflow_limit ({inflow_limit}), not that which is listed in the run_names.json")
 
     name = info['name']
 
@@ -63,15 +70,15 @@ def run(model_name, m = None, minvalue = 29.54,
     start_year = pd.to_datetime(datestart).year
 
     rr = load_riv(station='11464000', title='Russian River', file='RRinflow.dat', figurename='russian_river.png',
-                  datestart = datestart, out_folder = out_folder, m = m, numdays=numdays, save_fig=True, write_output=True,
+                  datestart = datestart, out_folder = out_folder, m = m, numdays=numdays, save_fig=True, write_output=write_output,
                   inflow_limit = inflow_limit)
 
     dry = load_riv(station='11465350', title='Dry Creek', file='Dry_creek.dat', figurename='dry_creek.png',
-                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=True,
+                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=write_output,
                    inflow_limit=inflow_limit)
 
     mw = load_riv(station='11466800', title='Mark West Creek', file='MarkWest.dat', figurename='mark_west.png',
-                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=True,
+                   datestart=datestart, out_folder=out_folder, m=m, numdays=numdays, save_fig=True, write_output=write_output,
                   inflow_limit=inflow_limit)
 
     total = dry.loc[:, 'Q'] + rr.loc[:, 'Q']
@@ -79,23 +86,24 @@ def run(model_name, m = None, minvalue = 29.54,
 
     stg = load_dam(total, datestart=datestart, minvalue=minvalue, max_value=max_value, numdays=numdays, clean = cleandamdata)
 
-    plot_dam(stg, minvalue=minvalue, max_value=max_value,
-              out_folder = out_folder)
+    if write_output:
+        plot_dam(stg, minvalue=minvalue, max_value=max_value,
+                  out_folder = out_folder)
 
-    f =    "1         1       0      11         51      9\n \
-    116       1       0        6          0.61   0.5  {:}          200.00       0.1       1     56    1 #{:}\n"
-    f.format(1,2)
+        f =    "1         1       0      11         51      25\n \
+        {:}       1       0        6          0.5   0.5  {:}          200.00       0.5       1     55    1 #{:}\n"
+        # f.format(1,2)
 
-    cnt = 0
-    for ind, d in stg.iterrows():
-        # print(d['Value'])
-        # print(ind)
-        name = os.path.join(m.model_ws, f"ref/dam_stage/day{cnt}.dat")
-        # print(name)
-        with open(name,'w') as out:
-            out.write(f.format(d['Value'], ind.strftime("%y %b %d")))
+        cnt = 0
+        for ind, d in stg.iterrows():
+            # print(d['Value'])
+            # print(ind)
+            name = os.path.join(m.model_ws, f"ref/dam_stage/day{cnt}.dat")
+            # print(name)
+            with open(name,'w') as out:
+                out.write(f.format(nswr_cells, d['Value'], ind.strftime("%y %b %d")))
 
-        cnt = cnt+1
+            cnt = cnt+1
 
     return rr, dry, mw, total, stg
 
@@ -141,6 +149,8 @@ def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109, clean 
 
     stg = pd.read_csv(p.joinpath(rds), parse_dates=[0]).set_index('StartDateTime')
 
+
+
     if clean:
         stg.loc[stg.loc[:, 'Value'] > 50, 'Value'] = 50.
         stg.loc[stg.loc[:, 'Value'] < 20, 'Value'] = 20.
@@ -169,6 +179,12 @@ def load_dam(total, datestart, minvalue=29.54, max_value=38, numdays=109, clean 
 
     stg.loc[:, "Value"] = stg.loc[:, 'INTERP']
 
+    if len(stg.filter(regex = "Jun|Notes").columns)>0:
+        print(f'dropping columns: {stg.filter(regex = "Jun|Notes").columns}')
+        stg = stg.drop(columns = stg.filter(regex = "Jun|Notes").columns)
+
+    print(stg.head())
+    print(stg.dtypes)
     stg = stg.resample('1D').mean()
 
     end_days = pd.to_datetime(datestart) + pd.to_timedelta(numdays, unit="D")

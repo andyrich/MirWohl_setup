@@ -21,6 +21,7 @@ from flopy.utils import ZoneBudget
 import conda_scripts.plot_help as ph
 import re
 
+
 def run(run_name, reload=False, ml=None, plot_well_locs = True, plot_hydros = True, skip_fancy = False, add_temp = True ):
     '''
 
@@ -68,11 +69,18 @@ def plot_residual(allobs, out_folder, ml):
     :return:
     '''
 
+    #check the number of obs:
+    if allobs.Observed.isnull().all() or allobs.Simulated.isnull().all():
+        warnings.warn(f"\nIn the Summary waterlevel df in plot_hydrographs:\mAll observed values are null {allobs.Observed.isnull().all() }\n\
+All Simulated values are null {allobs.Simulated.isnull().all() }\n")
+        return None, None
+
     locs = allobs.drop_duplicates('well').loc[:, ['geometry', 'well']]
 
     allobs.loc[:, 'residual'] = allobs.loc[:, 'Observed'] - allobs.loc[:, 'Simulated']
 
-    allobs = allobs.drop(columns='geometry').groupby('well').mean().reset_index()
+    print(allobs.head())
+    allobs = allobs.loc[:,['well',"residual"]].groupby('well').mean().reset_index()
 
     merged = pd.merge(allobs, locs, on='well')
     merged = gpd.GeoDataFrame(merged, geometry='geometry', crs=2226)
@@ -87,7 +95,7 @@ def plot_residual(allobs, out_folder, ml):
                 classification_kwds={'bins': np.arange(-25, 26, 5)},
                 scheme='UserDefined', zorder=105)
 
-    ph.label_points(ax=ax, gdf=merged, fmt=".1f", colname='residual', basin_name=None)
+    ph.label_points(ax=ax, already_str = False, gdf=merged, fmt=".1f", colname='residual', basin_name=None)
 
     ax.text(1, 0, 'Labels are residuals', ha='right', transform=ax.transAxes)
 
@@ -106,7 +114,7 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
     :param numdays:
     :return: obsall (predicted versus observed)
     '''
-    hds, hdsobj = basic.get_heads(ml)
+    _, hdsobj = basic.get_heads(ml, return_final= False)
     partics = os.path.join(out_folder, 'hydrographs')
     obsall = pd.DataFrame()
 
@@ -114,22 +122,33 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
     passed_wells = []
     plotted_wells = []
 
+    print(f'saving hydrographs to:\n\t{out_folder}')
+
+    pre_loaded_data =   pd.read_csv('Waterlevel_Data\mirabel_wohler_allGW_meas.csv', header=[0, 1],
+                            index_col=[0], parse_dates=True)
+
+    pre_loaded_data = pre_loaded_data.stack().groupby(level=0).mean()
+
     for _, wel in wells_mod.sort_values('station_no').iterrows():
         station_name = wel['station_name']
         print(f"plotting {station_name}")
-        idx = (wel.loc['Model Layer'] - 1, wel.loc['i_r'], wel.loc['j_c'])
+        modlayer = 0 if np.isnan(wel.loc['Model Layer']) else wel.loc['Model Layer'] - 1
+        idx = (modlayer, wel.loc['i_r'], wel.loc['j_c'])
+        #all obs in layer 1
+        # idx = (0, wel.loc['i_r'], wel.loc['j_c'])
         head = get_ts(idx, hdsobj, datestart)
-        obs = load_obs(wel.loc['Filename'], datestart, numdays=numdays)
+        obs = load_obs(station_name, datestart, numdays=numdays, preloaded_data=pre_loaded_data)
 
         ymin, ymax = basic.isnumber(wel['ymin']), basic.isnumber(wel['ymax'])
         ymin = ymin if (not np.isnan(ymin)) else None
         ymax = ymax if (not np.isnan(ymax)) else None
         # obs = load_obs(wel.loc['Well Name'], datestart,numdays=numdays)
 
+        skip_gw_data = True
         if obs.shape[0] == 0:
-            skip_gw_data = False
+            pass
         else:
-            skip_gw_data = True
+
             predvobs = head.join(obs.rename(columns={'Value': 'Observed'}), how = 'left')
 
             predvobs.loc[:, 'zone'] = wel['zone']
@@ -151,8 +170,8 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
                               f"index of observed\n{obs.index}\n" \
                               f"index of predvobs\n{predvobs.index}\n")
 
-            obsall = obsall.append(predvobs)
-
+            # obsall = obsall.append(predvobs)
+            obsall = pd.concat([obsall, predvobs])
 
         if skip_plotting:
             print('not plotting hydrographs')
@@ -176,8 +195,12 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
             minya, maxya = head.loc[:, 'Simulated'].min(), head.loc[:, 'Simulated'].max()
             nwp.upleft.set_ylim([minya - 10, maxya + 10])
             nwp.upleft.set_ylim([ymin, ymax])
-            if np.any([ymin, ymax] == None ):
+            if np.any([v is None for v in [ymin, ymax]]) :
                 ymin, ymax = nwp.upleft.get_ylim()
+
+                ymin = np.floor(ymin / 10) * 10
+                ymax = np.ceil(ymax / 10) * 10
+
 
             nwp.upleft.set_yticks(np.arange(ymin, ymax+1, 10))
             nwp.upleft.set_yticks(np.arange(ymin, ymax + 1, 2), minor=True)
@@ -228,6 +251,8 @@ def do_hydros(ml, wells_mod, out_folder, datestart, numdays, skip_plotting = Fal
             plt.close(plt.gcf())
             plt.close('all')
             plt.clf()
+            print(os.path.abspath(filename))
+            assert os.path.exists(filename), f'file does not exist\n{filename}'
 
             del nwp
 
@@ -330,7 +355,7 @@ def get_ts(idx, hdsobj, datestart, ):
     return df
 
 
-def load_obs(name, datestart=None, numdays=109):
+def load_obs(name, datestart=None, numdays=109, preloaded_data = None):
     '''
 
     :param name:
@@ -339,34 +364,43 @@ def load_obs(name, datestart=None, numdays=109):
     :return:
     '''
 
-    fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
+    if preloaded_data is None:
+        #these are the new data from 9/21/2023
+        dfall = pd.read_csv('C:\modeling\MirabelWohler\Waterlevel_Data\mirabel_wohler_allGW_meas.csv', header=[0, 1],
+                            index_col=[0], parse_dates=True)
 
-    # need to check if it's a caisson record. if it is, it needs to be loaded differently
-    if isinstance(name, str):
-        if 'caisson' in name.lower():
-            fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
-            caisson = True
-        else:
-            caisson = False
-
+        dfall = dfall.stack().groupby(level=0).mean()
     else:
-        name = 'no filename given'
+        dfall  = preloaded_data
 
-    path = pathlib.Path(fold).joinpath(name)
-    # path = pathlib.Path(fold).joinpath(name.replace(' ', '').replace('-', '_') + '.csv')
+    # fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\MonitoringWells"
+    #
+    # # need to check if it's a caisson record. if it is, it needs to be loaded differently
+    # if isinstance(name, str):
+    #     if 'caisson' in name.lower():
+    #         fold = r"Waterlevel_Data\MWs_Caissons - AvailableDailyAverages\DailyData\Caissons"
+    #         caisson = True
+    #     else:
+    #         caisson = False
+    #
+    # else:
+    #     name = 'no filename given'
+    #
+    # path = pathlib.Path(fold).joinpath(name)
+    # # path = pathlib.Path(fold).joinpath(name.replace(' ', '').replace('-', '_') + '.csv')
 
     # if end_time is None:
     end_time = pd.to_datetime(datestart) + pd.to_timedelta(numdays, unit='D')
 
-    if path.exists():
-        stg = read_stg(path, caisson = caisson)
-
-        if datestart is not None:
-            stg = stg.loc[datestart:end_time, :]
-
+    if name in dfall.columns:
+        # stg = read_stg(path, caisson = caisson)
+        stg = dfall.loc[datestart:end_time,[ name]]
+        stg = stg.rename(columns = {name:"Value"})
+        # if datestart is not None:
+        #     stg = stg.loc[datestart:end_time, :]
 
     else:
-        print(f"path does not exist:\n\n{path}\n")
+        print(f"station does not exist in mirabel_wohler_allGW_meas:\n\n{name}\n")
 
         stg = pd.DataFrame()
 
@@ -418,40 +452,40 @@ def load_temp(name, datestart=None, numdays=365):
 
     return stg
 
-def read_stg(path, caisson = False):
-    '''
-    load the wl record.
-    :param path:
-    :param caisson: if it's a caisson or not. these records are formatted differently.
-    :return: df with daily values of 'Value'
-    '''
-
-
-    print(f"----------\npath does exist:\n{path.name}\n")
-    if caisson:
-        stg = pd.read_csv(path)
-        stg = stg.rename(columns={'DateTime': 'Datetime'})
-        stg.loc[:, 'Datetime'] = pd.to_datetime(stg.loc[:, 'Datetime'])
-        stg = stg.set_index('Datetime')
-        stg = stg.loc[:, ['Value']]
-        stg.loc[:, 'Value'] = stg.loc[:, 'Value'].apply(basic.isnumber)
-        stg = stg.resample('1D').mean()
-
-        # get the name of the caisson in order to get the elevation offset
-        pattern = '[a-z]+'
-        repl = ''
-        caisson_name = re.sub(pattern, repl, path.name.replace('.csv', ''), flags=re.IGNORECASE)
-
-        stg = stg + caisson_offsets(caisson_name)
-        stg = stg.loc[(stg.loc[:, 'Value'] > -50) & (stg.loc[:, 'Value'] < 100)]
-
-    else:
-        stg = pd.read_csv(path, parse_dates=[0])
-        stg = stg.set_index(stg.columns[0])
-        stg = stg.resample('1D').mean()
-        stg = stg.loc[(stg.loc[:, 'Value'] > -50) & (stg.loc[:, 'Value'] < 100)]
-
-    return stg
+# def read_stg(path, caisson = False):
+#     '''
+#     load the wl record.
+#     :param path:
+#     :param caisson: if it's a caisson or not. these records are formatted differently.
+#     :return: df with daily values of 'Value'
+#     '''
+#
+#
+#     print(f"----------\npath does exist:\n{path.name}\n")
+#     if caisson:
+#         stg = pd.read_csv(path)
+#         stg = stg.rename(columns={'DateTime': 'Datetime'})
+#         stg.loc[:, 'Datetime'] = pd.to_datetime(stg.loc[:, 'Datetime'])
+#         stg = stg.set_index('Datetime')
+#         stg = stg.loc[:, ['Value']]
+#         stg.loc[:, 'Value'] = stg.loc[:, 'Value'].apply(basic.isnumber)
+#         stg = stg.resample('1D').mean()
+#
+#         # get the name of the caisson in order to get the elevation offset
+#         pattern = '[a-z]+'
+#         repl = ''
+#         caisson_name = re.sub(pattern, repl, path.name.replace('.csv', ''), flags=re.IGNORECASE)
+#
+#         stg = stg + caisson_offsets(caisson_name)
+#         stg = stg.loc[(stg.loc[:, 'Value'] > -50) & (stg.loc[:, 'Value'] < 100)]
+#
+#     else:
+#         stg = pd.read_csv(path, parse_dates=[0])
+#         stg = stg.set_index(stg.columns[0])
+#         stg = stg.resample('1D').mean()
+#         stg = stg.loc[(stg.loc[:, 'Value'] > -50) & (stg.loc[:, 'Value'] < 100)]
+#
+#     return stg
 
 def caisson_offsets(caisson):
     '''
@@ -487,14 +521,15 @@ def plot_model_wells(wells_mod, out_folder):
     :param out_folder:
     :return:
     '''
-    ibound = gpd.read_file("GIS/iboundlay1.shp")
+    data_folder = basic.get_data_folder()
+    ibound = gpd.read_file(basic.get_data_folder("GIS/iboundlay1.shp"))
     ibound = ibound.query("ibound_1==1")
 
-    swr = gpd.read_file("GIS/SWR_Reaches.shp")
+    swr = gpd.read_file(basic.get_data_folder("GIS/SWR_Reaches.shp"))
 
-    caissons = gpd.read_file('GIS/wells.shp')
+    caissons = gpd.read_file(basic.get_data_folder('GIS/wells.shp'))
 
-    sfr = gpd.read_file('SFR_files/only_sfr_cells.shp')
+    sfr = gpd.read_file(basic.get_data_folder('SFR_files/only_sfr_cells.shp'))
     wells_mod.to_html(os.path.join(out_folder, 'observation_wells.html'))
 
 
@@ -521,17 +556,23 @@ def load_wells_mod(ml):
     '''
 
     wiski_meta = get_wiski()
-    wells = get_well_locations()
 
-    wells_mod = pd.merge(wiski_meta, wells.loc[:, ['Well Name', 'Filename',
-                                                   'Model Layer',
-                                                   'WISKI', 'Notes_SX', 'Notes_SRM', 'ymin','ymax',
-                                                   'USGS Map ID (https://pubs.usgs.gov/ds/610/pdf/ds610.pdf)',
-                                                   'USGS NWIS ID',
-                                                   'WCR (Y/N)', 'Total completed depth (ft bgs)',
-                                                   'Total depth (ft bgs)',
-                                                   'Screened interval (ft bgs)', 'casing diameter (inches)', ]],
-                         left_on='station_name', right_on='WISKI', how='inner')
+    wells = get_well_locations()
+    # print(wiski_meta.columns)
+    # print(wells.columns)
+
+    wells_mod = pd.merge(wiski_meta, wells, on = 'station_no' )
+    # wells_mod = wiski_meta.loc[wiski_meta.station_no.isin(wells.station_no)]
+
+    # wells_mod = pd.merge(wiski_meta, wells.loc[:, ['Well Name', 'Filename',
+    #                                                'Model Layer',
+    #                                                'WISKI', 'Notes_SX', 'Notes_SRM', 'ymin','ymax',
+    #                                                'USGS Map ID (https://pubs.usgs.gov/ds/610/pdf/ds610.pdf)',
+    #                                                'USGS NWIS ID',
+    #                                                'WCR (Y/N)', 'Total completed depth (ft bgs)',
+    #                                                'Total depth (ft bgs)',
+    #                                                'Screened interval (ft bgs)', 'casing diameter (inches)', ]],
+    #                      left_on='station_name', right_on='WISKI', how='inner')
 
     # add column with link to open hydrograph
     def ref(x):
@@ -566,15 +607,36 @@ def load_wells_mod(ml):
     return wells_mod
 
 def get_well_locations():
+
+    #these are the updated (9/20/2023) list of wells in the mirabel wohler area
+    f = "Waterlevel_Data/Pressure_data_editing_2023/wiski_mirable_wohler_stations.csv"
+
+    f = pathlib.Path(f)
+
+    wisk = pd.read_csv(f)
+
+    k = wiski.wiski.get_kiwis()
+    ts = k.get_timeseries_list(station_name=','.join(wisk.loc[:, 'Station name'].values),
+                               return_fields=['station_name','station_no', 'ts_id', 'ts_name', 'coverage'])
+
+    mirabel_wohler_wells = ts.loc[pd.to_datetime(ts.loc[:, 'from']).notnull()].drop_duplicates('station_name')
+
+    # mirabel_wohler_wells = mirabel_wohler_wells.rename(columns = {'Station name':'station_name',
+    #                                                              'Station number':'station_no'})
     p = r"T:\smaples\USGS-LBNL_WQ\Wohler_MW_inventory\Monitoring Wells Site Visit Notes - Wohler+Mirabel_car.xlsx"
     t = pd.read_excel(p)
-    t = t.loc[t.loc[:, 'Longitude (iphone gps)'].notnull(), :]
-    df = gpd.GeoDataFrame(t, geometry=gpd.points_from_xy(t.loc[:, 'Longitude (iphone gps)'],
-                                                         t.loc[:, 'Latitude (iphone gps)'], crs=4326))
+    t = t.loc[:,['WISKI','Filename', 'Model Layer','ymin','ymax','Range']]
+    mirabel_wohler_wells = pd.merge(mirabel_wohler_wells, t, left_on = 'station_no', right_on = 'WISKI', how = 'left' )
 
-    df = df.to_crs(2226)
+    mirabel_wohler_wells = mirabel_wohler_wells.drop(columns = ['station_name', 'WISKI'])
 
-    return df
+    # t = t.loc[t.loc[:, 'Longitude (iphone gps)'].notnull(), :]
+    # df = gpd.GeoDataFrame(t, geometry=gpd.points_from_xy(t.loc[:, 'Longitude (iphone gps)'],
+    #                                                      t.loc[:, 'Latitude (iphone gps)'], crs=4326))
+    #
+    # df = df.to_crs(2226)
+
+    return mirabel_wohler_wells
 
 
 def get_wiski():

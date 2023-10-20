@@ -21,6 +21,7 @@ from flopy.utils import ZoneBudget
 import conda_scripts.plot_help as ph
 import re
 
+from shutil import ignore_patterns
 from subprocess import Popen
 import subprocess
 
@@ -38,7 +39,8 @@ def parallel(n = 8):
         if os.path.exists(dest):
             shutil.rmtree(dest)
 
-        shutil.copytree(base, dest)
+        shutil.copytree(base, dest, ignore=ignore_patterns('.git'))
+
         print(f"done with {dest}")
         # print(f"done with {dest}")
         os.chdir(dest)
