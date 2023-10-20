@@ -13,7 +13,7 @@ from matplotlib import ticker
 import pathlib
 
 
-def run(name, m = None, draw_maps = True, add_overland = True, ovr_flux = 0.5):
+def run(name, m = None, draw_maps = True, add_overland = True, ovr_flux = None):
 
     '''
     create pond recharge package
@@ -21,7 +21,7 @@ def run(name, m = None, draw_maps = True, add_overland = True, ovr_flux = 0.5):
     :param m: model instance
     :param draw_maps: make the maps
     :param add_overland: add overland flow
-    :param ovr_flux: ft/day
+    :param ovr_flux: ft/day it it's None, read it from run_names.json. it it's not there assume 0.5
     :return:
     '''
 
@@ -34,9 +34,23 @@ def run(name, m = None, draw_maps = True, add_overland = True, ovr_flux = 0.5):
     datestart = info['start_date']
     numdays = info['numdays']
 
-    out_folder = basic.out_folder(name)
+    # read ovr flux from json file. if its there, use it. else use default
+    if ovr_flux is None:
+        if "ovr_flux" in info:
+            print('using ovr_flux from run_names.json')
+            ovr_flux = info['ovr_flux']
+        else:
+            ovr_flux = 0.5
+            print(f'using defualt ovr_flux value of {ovr_flux}')
+    elif isinstance(ovr_flux, float):
+        print(f'using provided ovr_flux value of {ovr_flux}')
+    else:
+        raise ValueError(f'ovr_flux needs to be None or float, not {ovr_flux}')
 
-    pond_grid = gpd.read_file('ponds/ponds.geojson')
+    out_folder = basic.out_folder(name)
+    data_folder = basic.get_data_folder()
+    gis_shape = os.path.join(data_folder,'ponds/ponds.geojson' )
+    pond_grid = gpd.read_file(gis_shape)
 
     # get counts of pond cells
     p = 1 / pond_grid.groupby('name').count().loc[:, ['row']].rename(columns={'row': 'pond_frac'})
@@ -115,7 +129,9 @@ def make_rch(m, rech):
 
 
 def read_overland(m):
-    ovr = pd.read_csv('Overland_Flow/overland_flow_ts.csv', index_col=[0], parse_dates=True)
+    data_folder = basic.get_data_folder()
+    path = os.path.join(data_folder, 'Overland_Flow/overland_flow_ts_filled_ponds.csv',)
+    ovr = pd.read_csv( path, index_col=[0], parse_dates=True)
     ovr.loc[:, ['k', 'i', 'j']] = m.dis.get_lrc(list(ovr.loc[:, 'node_grid'].values))
 
     return ovr
@@ -217,7 +233,7 @@ def assign_inflow(df_pond):
 
 
 def load_phist(year=2020):
-    p = pathlib.Path(r"S:\Ops\RiverReport\Production_and_Demand_Report_PHIST01.xlsm")
+    p = pathlib.Path(r"S:\Ops\River Report\Production_and_Demand_Report_PHIST01.xlsm")
 
     sheet = f"Data_{year}"
 

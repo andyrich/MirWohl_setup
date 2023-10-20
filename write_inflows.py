@@ -24,7 +24,7 @@ def flo_dict():
     return flow
 
 def run(model_name, m = None, minvalue = 29.54,
-    max_value = 38,    numdays = None, datestart = None, cleandamdata = True, inflow_limit = 2000, write_output = True):
+    max_value = 38,    numdays = None, datestart = None, cleandamdata = True, inflow_limit = None, write_output = True):
     '''
     run processing of river inflows, dam stage
     :param write_output:
@@ -48,12 +48,17 @@ def run(model_name, m = None, minvalue = 29.54,
     if datestart is None:
         datestart = info['start_date']
     else:
-        warnings.warn(f"Using supplied datestart ({datestart}), not that which is listed in the run_names.txt")
+        warnings.warn(f"Using supplied datestart ({datestart}), not that which is listed in the run_names.json")
 
     if numdays is None:
         numdays = info['numdays']
     else:
-        warnings.warn(f"Using supplied numdays ({numdays}), not that which is listed in the run_names.txt")
+        warnings.warn(f"Using supplied numdays ({numdays}), not that which is listed in the run_names.json")
+
+    if inflow_limit is None:
+        inflow_limit = sfr_info['inflow_limit_cfs']
+    else:
+        warnings.warn(f"Using supplied inflow_limit ({inflow_limit}), not that which is listed in the run_names.json")
 
     name = info['name']
 

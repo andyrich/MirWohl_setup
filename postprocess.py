@@ -17,7 +17,9 @@ import pathlib
 
 def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = None, max_reach = None):
     '''
-
+    post process SWR output
+    :param max_reach:
+    :param m:
     :param model_name:
     :param ponds_only: plot only ponds
     :param riv_only: plot only SWR reaches
@@ -39,8 +41,10 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = 
 
     out_folder = basic.out_folder(model_name)
 
-    print(datestart)
-    print(out_folder)
+    print(f'datestart = {datestart}')
+    print(f'out_folder = {out_folder}')
+    print(f'numdays = {numdays}')
+    print(f"model_dir = {m.model_ws}")
 
     if ponds_only:
         r = [False]
@@ -51,7 +55,7 @@ def run(model_name, ponds_only = False, riv_only = False, plot_buds = True, m = 
 
     for remove_ponds in r:
         ISWRPQAQ, ISWRPRGF, ISWRPSTG, ISWRPSTR, ISWRPQM = SWR(m, datestart,
-                                                              remove_ponds = remove_ponds, max_reach = max_reach)
+                                  remove_ponds = remove_ponds, max_reach = max_reach)
 
         plot_sw_gw_exch(ISWRPQAQ,max_reach=max_reach,out_folder=out_folder)
 

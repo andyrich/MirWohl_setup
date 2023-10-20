@@ -57,7 +57,9 @@ def run(name, m = None, numdays = None, datestart = None, write_output = True):
 
 
 def load_wells():
-    wells = gpd.read_file('GIS/wells.shp')
+    # data_folder = os.environ['data_folder']
+    data_folder = basic.get_data_folder()
+    wells = gpd.read_file(os.path.join(data_folder,'GIS/wells.shp'))
     wells.loc[wells.loc[:,'flux']==0,'flux'] = -1 # some wells have no flow info, so setting to 1.
     
     smf = wells.drop(columns = 'geometry').groupby('wellname').sum().loc[:,'flux'].rename('sumflux')

@@ -68,9 +68,9 @@ def run(run_name, head_frequency = 5, add_basemap = False, ml = None, plot_thick
     hds = hdsobj.get_data(kstpkper=hdsobj.get_kstpkper()[-1])
 
     # for more information about GIS export, type help(export_array), for example
-    swr_reaches = gpd.read_file("GIS/SWR_Reaches.shp")
-    sfr_reaches = gpd.read_file("SFR_files/only_sfr_cells.shp")
-    wells = gpd.read_file("GIS/wells.shp")
+    swr_reaches = gpd.read_file(basic.get_data_folder("GIS/SWR_Reaches.shp"))
+    sfr_reaches = gpd.read_file(basic.get_data_folder("SFR_files/only_sfr_cells.shp"))
+    wells = gpd.read_file(basic.get_data_folder("GIS/wells.shp"))
 
     head = ''' <html>
     <head>
@@ -106,7 +106,15 @@ def run(run_name, head_frequency = 5, add_basemap = False, ml = None, plot_thick
 
     times = hdsobj.get_times()[::head_frequency]
 
+
+    if len(times)>30:
+        print(f"\nsetting head map output to every 30 days\nbecause there are more than 30 outputs with head_frequency: {head_frequency}")
+        times = hdsobj.get_times()[::30]
+
+    print(f"\n\nthe number of head plots will be {len(times)}")
+
     gallery = list()
+    print('\nplotting head maps in post_proccess_heads.py\n')
     for cnt, time in enumerate(times):
         hds = hdsobj.get_data(totim=time)
         date = pd.to_datetime(datestart) + pd.to_timedelta(time, unit = 's')
@@ -114,13 +122,18 @@ def run(run_name, head_frequency = 5, add_basemap = False, ml = None, plot_thick
         title = f'Heads at {date}'
 
         if plot_thickness:
-            plot_water_table_and_sat_thickness(hds, swr_reaches, sfr_reaches, ml,wells,  title, add_basemap=add_basemap)
+            fig = plot_water_table_and_sat_thickness(hds, swr_reaches, sfr_reaches, ml,wells,  title, add_basemap=add_basemap)
         else:
-            plot_all_heads(                    hds, swr_reaches, sfr_reaches, ml, title, add_basemap = add_basemap)
+            fig = plot_all_heads(                    hds, swr_reaches, sfr_reaches, ml, title, add_basemap = add_basemap)
 
         filename = f'Day{cnt}.png'
-
+        print(f"Saving Figure: {pd.to_datetime(datestart) + pd.to_timedelta(time, unit = 's')},  {cnt} of {len(times)}", end='\r')
         plt.savefig(os.path.join(out_folder, 'wl_maps',filename), bbox_inches = 'tight', dpi = 250)
+
+
+
+        plt.close(fig)
+        plt.close('all')
 
         gal = """<div class="gallery">
           <a target="_blank" href="wl_maps/{:}">
@@ -138,6 +151,7 @@ def run(run_name, head_frequency = 5, add_basemap = False, ml = None, plot_thick
             outfile.write(v)
         outfile.write(tail)
 
+    print('\n\nDone plotting head maps in post_process_heads.py\n\n')
 
 def set_bounds(ax, locname):
 
@@ -159,8 +173,10 @@ def plot_water_table_and_sat_thickness(hds, swr_reaches, sfr_reaches, ml, wells,
     :param add_basemap:
     :return:
     '''
+
     fig, axes = plt.subplots(2, 1, figsize=(5, 8), gridspec_kw={'hspace': .001},
                              subplot_kw=dict(projection=ccrs.epsg(2226)))
+
 
     ax = axes[0]
     mapview = flopy.plot.PlotMapView(ml, ax=ax)
@@ -203,6 +219,8 @@ def plot_water_table_and_sat_thickness(hds, swr_reaches, sfr_reaches, ml, wells,
     [(swr_reaches.plot(ax=axi), sfr_reaches.plot(ax=axi), wells.plot(ax=axi, facecolor='None')) for axi in axes]
 
     fig.suptitle(title)
+
+    return fig
 
 def plot_all_heads(hds, swr_reaches, sfr_reaches, ml, title, add_basemap = True):
     '''
@@ -253,3 +271,5 @@ def plot_all_heads(hds, swr_reaches, sfr_reaches, ml, title, add_basemap = True)
     fig.colorbar(quadmesh, cax=cbar_ax, label="Head")
 
     fig.suptitle(title)
+
+    return fig

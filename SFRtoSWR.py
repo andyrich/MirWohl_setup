@@ -212,7 +212,7 @@ def run(run_name, model_dir = 'RR_2022'):
 
     print('done with main processing, still need to do geometry processing')
     if set_start_stage:
-        endh = write_start_stage(sfr_filt,m, stage_shift_from_mod_top =.51, use_thalweg = use_thalweg, kper = kper)
+        endh = write_start_stage(sfr_filt,m, stage_shift_from_mod_top =.51, use_thalweg = use_thalweg, kper = kper,model_dir=model_dir)
         print(f'setting new stages from old run. using kper {kper} as extraction period')
     else:
         print('not setting new starting stages from old run.')
@@ -221,7 +221,7 @@ def run(run_name, model_dir = 'RR_2022'):
         # endh.columns = ['reach','endheads']
         endh = None
 
-    plot_start_stage(endh, out_folder)
+    plot_start_stage(endh, out_folder, model_dir=model_dir)
     # ax = endh.set_index('reach').rename(columns = {'endheads':'starting stage'}).plot(title = 'starting stage', marker = '.', figsize = (10,4))
     # ax.grid(True); ax.set_ylabel('feet, elevation')
     # plt.savefig(os.path.join(out_folder, 'star_stage.png'))
@@ -442,92 +442,6 @@ def run(run_name, model_dir = 'RR_2022'):
                                 geo_keys=geo_keys
                                )
 
-
-
-
-    # In[35]:
-
-
-    # import warnings
-    # def write_dataset_11a_with_geo_alt(sfr_filt, min_elev = None,
-    #                                    IGEOTYPE = 3, IGCNDOP = 1, GMANNING = 0.025,   LEAKANCE = .000001, getextd = 0.25, extra = 0.25):
-    #     '''
-    #     write geo with constant cross section data, ie reusing cross sections
-
-    #     '''
-    #     # IGCNDOP = 0, Fixed conductance is specified for the geometry entry.
-    #     # DATASET 11A - GEOMETRY DATA
-    # # IGEONUM IGEOTYPE IGCNDOP GMANNING NGEOPTS GWIDTH GBELEV GSSLOPE    GCND      GLK GCNDLN GETEXTD
-    # #      1    5         1      .25                                     9.2E-04                   0.25
-
-    #     if min_elev is None:
-    #         print('using observed thalwegs, then smoothing')
-    #         min_elev ={}
-    #         for xxx in sfr_filt.loc[:,['rno','NGEOPTS', 'xsect']].values:
-    #             IGEONUM = xxx[0]
-    #             NGEOPTS = xxx[1]
-    #             xs = xxx[2]
-    #             cur = dfall.query(f"xsect=='{xs}'")
-    #             cur = cur.loc[:,['dist','z']]
-    #             min_elev[IGEONUM] = cur.loc[:,'z'].min()
-
-    #         min_elev = pd.DataFrame.from_dict(min_elev,orient='index',columns = ['THALWEG'])
-    #         min_elev.index = min_elev.index.set_names('reach')
-    #         min_elev.loc[:,'THALWEG_Smoothed'] = min_elev.ewm(span = 20).mean()
-
-    #     warnings.warn('\nsimple geo\n'*10)
-
-    #     with open('RR_2022/inputs/dataset11a_with_geo.txt','w') as r:
-    #         r.write("# DATASET 11A - GEOMETRY DATA\n")
-    #         r.write("# IGEONUM IGEOTYPE IGCNDOP GMANNING NGEOPTS GWIDTH GBELEV GSSLOPE    LEAKANCE      GLK GCNDLN GETEXTD\n")
-
-    #     with open('RR_2022/inputs/dataset11a_with_geo.txt','a', newline = '') as r:
-    #         for xxx in sfr_filt.loc[:,['rno','NGEOPTS', 'xsect']].values:
-    #             IGEONUM = xxx[0]
-    #             xs = 'REACH_418'
-    #             NGEOPTS = sfr_filt.drop_duplicates('xsect').query(f"xsect=='{xs}'").NGEOPTS.values[0]
-
-
-    #             # xs = 1
-    #             r.write(f"    {IGEONUM}\t{IGEOTYPE}\t{IGCNDOP}\t{GMANNING}\t{NGEOPTS}\t{LEAKANCE} \n")
-
-
-    #             cur = dfall.query(f"xsect=='{xs}'")
-    #             cur = cur.loc[:,['dist','z']]
-
-    #             minz = cur.loc[:,'z'].min()  - min_elev.at[IGEONUM, 'THALWEG_Smoothed']
-    #             # minz = cur.loc[:,'z'].min() - (39-IGEONUM*.1)
-
-    #             cur.loc[:,'z'] = cur.loc[:,'z'] -minz
-
-
-    #             cur.to_csv(r, sep = '\t',header = False, index = False)
-
-    #     assert not((min_elev.diff().thalweg>=0).any()), 'there are positive changes in elevation from reach to reach'
-
-    #     # with open('RR_2022/inputs/stream_thalwegs.txt','w') as mint:
-    #     #     mint.write('reach,thalweg\n')
-    #     #     [mint.write("{}, {}\n".format(item[0], item[1])) for item in min_elev.items()]
-    #     #         # r.write('geo geo geo\n')
-
-    #     if 'THALWEG' in sfr_filt.columns:
-    #         sfr_filt = sfr_filt.drop(columns = 'THALWEG')
-    #     sfr_filt = pd.merge(sfr_filt, min_elev, left_on = 'rno', right_index = True )
-    #     sfr_filt = gpd.GeoDataFrame(sfr_filt, geometry = 'geometry', crs = 2226)
-
-    #     return min_elev, sfr_filt
-    # min_elev, sfr_filt_with_xsec = write_dataset_11a_with_geo_alt(sfr_filt_with_xsec,
-    #                            IGEOTYPE = 3,
-    #                            IGCNDOP = 0,
-    #                            GMANNING = 0.35,
-    #                            LEAKANCE = 0.0030,
-    #                            getextd = 0.25,
-    #                            )
-
-    # min_elev.add(3.0).to_csv(os.path.join('RR_2022', 'inputs', 'start_stage.tab'), sep = '\t',header = None)
-
-
-    # In[36]:
 
     print(r'exporting SWR reach data to GIS and GIS')
     sfr_filt_with_xsec.to_file('GIS/SWR_Reaches.shp')

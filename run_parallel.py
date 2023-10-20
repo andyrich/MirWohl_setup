@@ -5,7 +5,6 @@ import pandas as pd
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 import basic
 import SFRtoSWR
-import SFR_calibrate
 import postprocess
 import write_inflows
 import Hydrographs
@@ -13,7 +12,6 @@ import post_process_heads
 import matplotlib.pyplot as plt
 import write_pond_inflows_rch
 import make_wells
-import GHB
 import initial_conditions
 import zone_bud
 import os
@@ -25,7 +23,7 @@ import Streamflows
 import traceback
 
 
-def copyfiles(run, starting_heads_from_previous = True, date_start = None):
+def copyfiles(run, starting_heads_from_previous = True, date_start = None, main_folder = None):
     '''
     copyfiles from source (RR_2022) to new run
     :param run: run_name from run_names.json
@@ -34,9 +32,13 @@ def copyfiles(run, starting_heads_from_previous = True, date_start = None):
     :return: new_folder
     '''
 
-    EXE_DIR = 'RR_2022'
 
-    new_folder = os.path.join('temp', run)
+    if main_folder is None:
+        main_folder = r'C:\modeling\MirabelWohler'
+
+    EXE_DIR = os.path.join(main_folder,'RR_2022')
+
+    new_folder = os.path.join(main_folder, 'temp', run)
     print(f'copying files from {EXE_DIR} to {new_folder}\n')
 
     if os.path.exists(new_folder):
@@ -75,19 +77,38 @@ def par_run(run,  numdays = None,
             skip_setup = False,
             check_for_success = True,
             copyfiles_from_base = True,
+            copy_mod_files_for_website = True,
             do_pre_run = False,
             model_dir = None,
+            main_folder = None,
             starting_heads_from_previous = False,
             set_starting_heads_after = False,
-            do_zone_bud = False):
+            make_wells_input = True,
+            write_inflows_input = True,
+            write_SFRtoSWR = True,
+            write_pond_inflows = True,
+            do_zone_bud = False,
+            post_process_hydrographs = True,
+            post_process_streamflow = True,
+            post_process_head_maps = True,
+            post_process_SWR = True):
 
     '''
     run single model with name 'run' in the path.
+    :param write_inflows_input:
+    :param make_wells_input:
+    :param write_pond_inflows:
+    :param write_SFRtoSWR:
+    :param main_folder: main folder all model runs are - defaults to C:\modeling\MirabelWohler
     :param do_pre_run:
     :param copyfiles_from_base:
     :param check_for_success:
     :param skip_setup:
     :param post_process_only:
+    :param post_process_hydrographs:
+    :param post_process_streamflow:
+    :param post_process_head_maps:
+    :param post_process_SWR:
     :param run:
     :param numdays:
     :param model_dir: model_dir to model_dir (if None will be assumed to be temp/{run})
@@ -106,12 +127,14 @@ def par_run(run,  numdays = None,
         starting_heads_from_previous = False
 
 
-
+    if main_folder is None:
+        main_folder = r'C:\modeling\MirabelWohler'
 
     if copyfiles_from_base:
-        model_dir = copyfiles(run, starting_heads_from_previous=starting_heads_from_previous)
+        model_dir = copyfiles(run, starting_heads_from_previous=starting_heads_from_previous,
+                              main_folder = main_folder)
     elif model_dir is None:
-        model_dir = os.path.join('temp', run)
+        model_dir = os.path.join(main_folder, 'temp', run)
     else:
         if os.path.exists(model_dir):
             print('using user defined model_dir')
@@ -143,7 +166,7 @@ def par_run(run,  numdays = None,
             # SFRtoSWR.run(run_name = run)
         except Exception as e:
             warnings.warn(f"failed bc of\n{e}")
-            print( traceback.format_exc())
+            print(traceback.format_exc())
 
             basic.write_run_name_to_file(run, 'failed set up   ' + e, mode='a')
 
@@ -179,14 +202,25 @@ def par_run(run,  numdays = None,
         print('not creating input files')
     else:
         try:
-            make_wells.run(name=run, m = m)
+            if make_wells_input:
+                make_wells.run(name=run, m = m)
 
-            write_inflows.run(model_name=run, m = m)
-            write_pond_inflows_rch.run(run, m = m)
-            SFRtoSWR.run(run_name=run, model_dir=model_dir)
-            SFRtoSWR.plot_start_stage(None, os.path.join('versions', run),model_dir= model_dir)
+            if write_inflows_input:
+                print('writing inflows')
+                write_inflows.run(model_name=run, m = m)
+            if write_pond_inflows:
+                print('writing pond inflows')
+                write_pond_inflows_rch.run(run, m = m)
 
-            basic.copy_mod_files(run)
+            if write_SFRtoSWR:
+                print('writing SFRtoSWR')
+                SFRtoSWR.run(run_name=run, model_dir=model_dir)
+                SFRtoSWR.plot_start_stage(None, os.path.join('versions', run),model_dir= model_dir)
+
+            if copy_mod_files_for_website:
+                print('copying model files to webiste folder')
+                basic.copy_mod_files(run, path = model_dir)
+
         except Exception as e:
             warnings.warn(f"failed bc of\n{e}")
             print(traceback.format_exc())
@@ -203,10 +237,14 @@ def par_run(run,  numdays = None,
         try:
             basic.write_run_name_to_file(run, 'successful', mode = 'a')
             basic.setup_folder(run)
-            Hydrographs.run(run_name=run, reload = True, ml = m)
-            postprocess.run(run, riv_only = True, m= m)
-            Streamflows.run(out_folder=os.path.join('versions', run), ml=m)
-            post_process_heads.run(run_name=run, head_frequency=10, ml = m, add_basemap=True)
+            if post_process_hydrographs:
+                Hydrographs.run(run_name=run, reload = True, ml = m)
+            if post_process_SWR:
+                postprocess.run(run, riv_only = True, m= m)
+            if post_process_streamflow:
+                Streamflows.run(out_folder=os.path.join('versions', run), ml=m)
+            if post_process_head_maps:
+                post_process_heads.run(run_name=run, head_frequency=14, ml = m, add_basemap=True)
 
             if do_zone_bud:
                 zone_bud.run(run, ml = m)
